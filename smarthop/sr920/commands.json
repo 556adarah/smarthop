@@ -1,0 +1,1512 @@
+{
+  "commands": [
+    {
+      "name": "READ_CONFIG_REQUEST",
+      "description": "設定取得要求",
+      "parameters": [
+        {
+          "name": "config_id",
+          "description": "ConfigID",
+          "type": "enum:SR920ConfigId",
+          "length": 1
+        }
+      ]
+    },
+    {
+      "name": "READ_CONFIG_RESPONSE",
+      "description": "設定取得応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "config_id",
+          "description": "ConfigID",
+          "type": "enum:SR920ConfigId",
+          "length": 1
+        },
+        {
+          "type": "ref:config_value"
+        }
+      ]
+    },
+    {
+      "name": "WRITE_CONFIG_REQUEST",
+      "description": "設定変更要求",
+      "parameters": [
+        {
+          "name": "config_id",
+          "description": "ConfigID",
+          "type": "enum:SR920ConfigId",
+          "length": 1
+        },
+        {
+          "name": "reserved",
+          "description": "（固定値）",
+          "type": "hex",
+          "length": 1,
+          "value": "02"
+        },
+        {
+          "type": "ref:config_value"
+        }
+      ]
+    },
+    {
+      "name": "WRITE_CONFIG_RESPONSE",
+      "description": "設定変更応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "config_id",
+          "description": "ConfigID",
+          "type": "enum:SR920ConfigId",
+          "length": 1
+        }
+      ]
+    },
+    {
+      "name": "SAVE_CONFIG_REQUEST",
+      "description": "設定保存要求"
+    },
+    {
+      "name": "SAVE_CONFIG_RESPONSE",
+      "description": "設定保存応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        }
+      ]
+    },
+    {
+      "name": "RESET_CONFIG_REQUEST",
+      "description": "設定リセット要求"
+    },
+    {
+      "name": "RESET_CONFIG_RESPONSE",
+      "description": "設定リセット応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        }
+      ]
+    },
+    {
+      "name": "SEND_DATA_REQUEST",
+      "description": "データ送信要求",
+      "parameters": [
+        {
+          "name": "destination",
+          "description": "送信先アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "reserved",
+          "description": "（固定値）",
+          "type": "hex",
+          "length": 1,
+          "value": "00"
+        },
+        {
+          "name": "source",
+          "description": "送信元アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "reserved",
+          "description": "（固定値）",
+          "type": "hex",
+          "length": 1,
+          "value": "00"
+        },
+        {
+          "name": "nor",
+          "description": "NOR",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "security",
+          "description": "セキュリティ設定",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "ttl",
+          "description": "TTL",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "data",
+          "description": "送信データ",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "SEND_DATA_RESPONSE",
+      "description": "データ送信応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "destination",
+          "description": "送信先アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "reserved",
+          "description": "（固定値）",
+          "type": "hex",
+          "length": 1,
+          "value": "00"
+        },
+        {
+          "name": "source",
+          "description": "送信元アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "reserved",
+          "description": "（固定値）",
+          "type": "hex",
+          "length": 1,
+          "value": "00"
+        },
+        {
+          "name": "nor",
+          "description": "NOR",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "security",
+          "description": "セキュリティ設定",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "data",
+          "description": "送信データ",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "DATA_RECEIVED_NOTIFICATION",
+      "description": "データ受信通知",
+      "parameters": [
+        {
+          "name": "destination",
+          "description": "送信先アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "reserved",
+          "description": "（固定値）",
+          "type": "hex",
+          "length": 1,
+          "value": "00"
+        },
+        {
+          "name": "source",
+          "description": "送信元アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "reserved",
+          "description": "（固定値）",
+          "type": "hex",
+          "length": 1,
+          "value": "00"
+        },
+        {
+          "name": "nor",
+          "description": "NOR残存数",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "security",
+          "description": "セキュリティ設定",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "ttl",
+          "description": "TTL",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "data",
+          "description": "データ",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "WRITE_RAM_CONFIG_REQUEST",
+      "description": "RAM値設定変更要求",
+      "parameters": [
+        {
+          "name": "config_id",
+          "description": "ConfigID",
+          "type": "enum:SR920ConfigId",
+          "length": 1
+        },
+        {
+          "type": "ref:config_value"
+        }
+      ]
+    },
+    {
+      "name": "WRITE_RAM_CONFIG_RESPONSE",
+      "description": "RAM値設定変更応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "config_id",
+          "description": "ConfigID",
+          "type": "enum:SR920ConfigId",
+          "length": 1
+        }
+      ]
+    },
+    {
+      "name": "READ_RAM_CONFIG_REQUEST",
+      "description": "RAM値設定取得要求",
+      "parameters": [
+        {
+          "name": "config_id",
+          "description": "ConfigID",
+          "type": "enum:SR920ConfigId",
+          "length": 1
+        }
+      ]
+    },
+    {
+      "name": "READ_RAM_CONFIG_RESPONSE",
+      "description": "RAM値設定取得応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "config_id",
+          "description": "ConfigID",
+          "type": "enum:SR920ConfigId",
+          "length": 1
+        },
+        {
+          "type": "ref:config_value"
+        }
+      ]
+    },
+    {
+      "name": "START_NETWORK_REQUEST",
+      "description": "NWKスタート要求",
+      "parameters": [
+        {
+          "name": "mode",
+          "description": "動作パラメータ",
+          "type": "enum:SR920NetworkMode",
+          "length": 1
+        }
+      ]
+    },
+    {
+      "name": "START_NETWORK_RESPONSE",
+      "description": "NWKスタート応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "mode",
+          "description": "動作パラメータ",
+          "type": "enum:SR920NetworkMode"
+        }
+      ]
+    },
+    {
+      "name": "NETWORK_STATE_CHANGED_NOTIFICATION",
+      "description": "NWK状態変更通知",
+      "parameters": [
+        {
+          "name": "state",
+          "description": "状態",
+          "type": "enum:SR920NetworkState",
+          "length": 1
+        },
+        {
+          "type": "select:state",
+          "cases": [
+            {
+              "case": ["ADDRESS_CHANGED"],
+              "parameters": [
+                {
+                  "type": "ref:network_address"
+                },
+                {
+                  "name": "coordinator_address",
+                  "description": "親機のショートアドレス",
+                  "type": "hex",
+                  "length": 2,
+                  "byteorder": "little"
+                }
+              ]
+            },
+            {
+              "case": ["MODULE_INITIALIZED"],
+              "parameters": []
+            },
+            {
+              "case": ["NODE_CONNECTED", "NODE_DISCONNECTED"],
+              "parameters": [
+                {
+                  "type": "ref:node_info"
+                }
+              ]
+            },
+            {
+              "default": [
+                {
+                  "name": "details",
+                  "description": "詳細情報",
+                  "type": "bytes"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RESET_REQUEST",
+      "description": "リセット要求",
+      "parameters": [
+        {
+          "name": "reset_parameter",
+          "description": "リセットパラメータ",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "RESET_RESPONSE",
+      "description": "リセット応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "reset_parameter",
+          "description": "パラメータ",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        }
+      ]
+    },
+    {
+      "name": "SET_TIME_REQUEST",
+      "description": "時刻設定要求",
+      "parameters": [
+        {
+          "type": "ref:time_info"
+        }
+      ]
+    },
+    {
+      "name": "SET_TIME_RESPONSE",
+      "description": "時刻設定応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        }
+      ]
+    },
+    {
+      "name": "GET_TIME_REQUEST",
+      "description": "時刻取得要求"
+    },
+    {
+      "name": "GET_TIME_RESPONSE",
+      "description": "時刻取得応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "type": "ref:time_info"
+        }
+      ]
+    },
+    {
+      "name": "GET_VERSION_REQUEST",
+      "description": "バージョン取得要求"
+    },
+    {
+      "name": "GET_VERSION_RESPONSE",
+      "description": "バージョン取得応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "version",
+          "description": "バージョン情報",
+          "type": "str",
+          "length": 12
+        }
+      ]
+    },
+    {
+      "name": "GET_NODE_LIST_REQUEST",
+      "description": "ノード一覧取得要求",
+      "parameters": [
+        {
+          "name": "list_type",
+          "description": "子機種別",
+          "type": "enum:SR920NodeListType",
+          "length": 1
+        },
+        {
+          "name": "seq_no",
+          "description": "シーケンス番号",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        }
+      ]
+    },
+    {
+      "name": "GET_NODE_LIST_RESPONSE",
+      "description": "ノード一覧取得応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "seq_no",
+          "description": "シーケンス番号",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "node_list",
+          "description": "ノード一覧",
+          "type": "array",
+          "items": {
+            "name": "node_info",
+            "description": "ノード情報",
+            "type": "object",
+            "properties": [
+              {
+                "type": "ref:node_info"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET_LINK_LIST_REQUEST",
+      "description": "下り経路情報取得要求",
+      "parameters": [
+        {
+          "name": "seq_no",
+          "description": "シーケンス番号",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        }
+      ]
+    },
+    {
+      "name": "GET_LINK_LIST_RESPONSE",
+      "description": "下り経路情報取得応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "seq_no",
+          "description": "シーケンス番号",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "link_list",
+          "description": "リンク一覧",
+          "type": "array",
+          "items": {
+            "name": "link_info",
+            "description": "リンク情報",
+            "type": "object",
+            "properties": [
+              {
+                "name": "child",
+                "description": "子ノードのショートアドレス",
+                "type": "hex",
+                "length": 2,
+                "byteorder": "little"
+              },
+              {
+                "name": "parent",
+                "description": "親ノードのショートアドレス",
+                "type": "hex",
+                "length": 2,
+                "byteorder": "little"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET_ROUTE_REQUEST",
+      "description": "経路テスト要求",
+      "parameters": [
+        {
+          "name": "target",
+          "description": "対象アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        }
+      ]
+    },
+    {
+      "name": "GET_ROUTE_RESPONSE",
+      "description": "経路テスト応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "route_info",
+          "description": "下り経路情報",
+          "type": "array",
+          "items": {
+            "name": "short_address",
+            "description": "対象アドレス",
+            "type": "hex",
+            "length": 2,
+            "byteorder": "little"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MEASURE_RTT_REQUEST",
+      "description": "RTT測定要求",
+      "parameters": [
+        {
+          "name": "target",
+          "description": "対象アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "length",
+          "description": "データ長",
+          "type": "int",
+          "length": 1
+        }
+      ]
+    },
+    {
+      "name": "MEASURE_RTT_RESPONSE",
+      "description": "RTT測定応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "rtt",
+          "description": "往復通信所要時間（RTT）",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "hop",
+          "description": "ホップ数",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "voltage",
+          "description": "電圧",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        }
+      ]
+    },
+    {
+      "name": "GET_NEIGHBOR_INFO_REQUEST",
+      "description": "隣接情報取得要求",
+      "parameters": [
+        {
+          "name": "target",
+          "description": "対象アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        }
+      ]
+    },
+    {
+      "name": "GET_NEIGHBOR_INFO_RESPONSE",
+      "description": "隣接情報取得応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "neighbor_list",
+          "description": "隣接ノード情報一覧",
+          "type": "array",
+          "items": {
+            "name": "neighbor_info",
+            "description": "隣接ノード情報",
+            "type": "object",
+            "properties": [
+              {
+                "name": "short_address",
+                "description": "対象アドレス",
+                "type": "hex",
+                "length": 2,
+                "byteorder": "little"
+              },
+              {
+                "name": "rssi",
+                "description": "RSSI値",
+                "type": "int",
+                "length": 1,
+                "signed": true
+              },
+              {
+                "name": "link_cost",
+                "description": "リンクコスト値",
+                "type": "int",
+                "length": 1
+              },
+              {
+                "name": "hello",
+                "description": "HELLO受信状況",
+                "type": "bytes",
+                "length": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CONTROL_FIXED_ADDRESS_REQUEST",
+      "description": "固定アドレス設定要求",
+      "parameters": [
+        {
+          "name": "mode",
+          "description": "操作種別",
+          "type": "enum:SR920FixedAddressControlMode",
+          "legnth": 1
+        },
+        {
+          "type": "ref:node_info"
+        }
+      ]
+    },
+    {
+      "name": "CONTROL_FIXED_ADDRESS_RESPONSE",
+      "description": "固定アドレス設定応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "type": "ref:node_info"
+        }
+      ]
+    },
+    {
+      "name": "GET_MY_NEIGHBOR_INFO_REQUEST",
+      "description": "隣接ノード情報取得要求"
+    },
+    {
+      "name": "GET_MY_NEIGHBOR_INFO_RESPONSE",
+      "description": "隣接ノード情報取得応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "neighbor_list",
+          "description": "隣接ノード情報一覧",
+          "type": "array",
+          "items": {
+            "name": "neighbor_info",
+            "description": "隣接ノード情報",
+            "type": "object",
+            "properties": [
+              {
+                "name": "short_address",
+                "description": "対象アドレス",
+                "type": "hex",
+                "length": 2,
+                "byteorder": "little"
+              },
+              {
+                "name": "rssi",
+                "description": "RSSI値",
+                "type": "int",
+                "length": 1,
+                "signed": true
+              },
+              {
+                "name": "hop",
+                "description": "ホップカウント値",
+                "type": "int",
+                "length": 1
+              },
+              {
+                "name": "parent",
+                "description": "上位ノードアドレス",
+                "type": "hex",
+                "length": 2,
+                "byteorder": "little"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET_NETWORK_ADDRESS_REQUEST",
+      "description": "NWKアドレス取得要求"
+    },
+    {
+      "name": "GET_NETWORK_ADDRESS_RESPONSE",
+      "description": "NWKアドレス取得応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "type": "ref:network_address"
+        },
+        {
+          "name": "coordinator_address",
+          "description": "親機のショートアドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        }
+      ]
+    }
+  ],
+  "definitions": {
+    "config_value": [
+      {
+        "type": "select:config_id",
+        "cases": [
+          {
+            "case": ["TX_POWER"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "送信出力",
+                "type": "enum:SR920TxPower",
+                "length": 1
+              }
+            ]
+          },
+          {
+            "case": ["MAC_ADDRESS"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "MACアドレス",
+                "type": "hex",
+                "length": 8,
+                "byteorder": "little"
+              }
+            ]
+          },
+          {
+            "case": ["ASYNC_FALLBACK_COUNT"],
+            "parameters": [
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 4,
+                "value": "0108050a"
+              },
+              {
+                "name": "value",
+                "description": "非同期通信切替回数",
+                "type": "int",
+                "length": 1
+              },
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 1,
+                "value": "04"
+              }
+            ]
+          },
+          {
+            "case": ["LED"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "LED設定",
+                "type": "bool",
+                "length": 1
+              }
+            ]
+          },
+          {
+            "case": ["DUMMY_SIZE"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "UART通信におけるDummy部サイズ",
+                "type": "int",
+                "length": 2,
+                "byteorder": "little"
+              }
+            ]
+          },
+          {
+            "case": ["PARENT_SELECTION_MODE"],
+            "parameters": [
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 4,
+                "value": "03000001"
+              },
+              {
+                "name": "value",
+                "description": "中継親選択モード",
+                "type": "bytes",
+                "length": 1
+              },
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 1,
+                "value": "00"
+              }
+            ]
+          },
+          {
+            "case": ["ENABLE_ENCRYPTION"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "暗号化パケットの中継制御",
+                "type": "bool",
+                "length": 1,
+                "true-value": "6a",
+                "false-value": "7a"
+              }
+            ]
+          },
+          {
+            "case": ["AUTO_START"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "NWK自動スタート設定",
+                "type": "bool",
+                "length": 1,
+                "true-value": "00",
+                "false-value": "01"
+              }
+            ]
+          },
+          {
+            "case": ["MAC_RETRY_COUNT"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "MAC再送回数",
+                "type": "int",
+                "length": 1
+              }
+            ]
+          },
+          {
+            "case": ["NODE_TYPE"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "ノードタイプ",
+                "type": "enum:SR920NodeType",
+                "length": 1
+              }
+            ]
+          },
+          {
+            "case": ["NETWORK_ADDRESS"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "NWKアドレス",
+                "type": "object",
+                "properties": [
+                  {
+                    "type": "ref:network_address"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "case": ["HELLO_INTERVAL"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "HELLO送信設定",
+                "type": "bytes",
+                "length": 1
+              },
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 2,
+                "value": "1903"
+              }
+            ]
+          },
+          {
+            "case": ["RREC_INTERVAL"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "RREC送信設定",
+                "type": "bytes",
+                "length": 1
+              },
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 3,
+                "value": "190505"
+              }
+            ]
+          },
+          {
+            "case": ["UPLINK_RETRY"],
+            "parameters": [
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 1,
+                "value": "01"
+              },
+              {
+                "name": "value",
+                "description": "上り再送設定",
+                "type": "int",
+                "length": 1
+              },
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 1,
+                "value": "64"
+              }
+            ]
+          },
+          {
+            "case": ["DOWNLINK_RETRY"],
+            "parameters": [
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 1,
+                "value": "01"
+              },
+              {
+                "name": "value",
+                "description": "下り再送設定",
+                "type": "int",
+                "length": 1
+              },
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 1,
+                "value": "64"
+              }
+            ]
+          },
+          {
+            "case": ["SLEEP_INTERVAL"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "省電力周期",
+                "type": "int",
+                "length": 1
+              }
+            ]
+          },
+          {
+            "case": ["UPLINK_STATISTICS"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "上り通信統計情報",
+                "type": "object",
+                "properties": [
+                  {
+                    "type": "ref:statistics"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "case": ["DOWNLINK_STATISTICS"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "下り通信統計情報",
+                "type": "object",
+                "properties": [
+                  {
+                    "type": "ref:statistics"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "case": ["RREC_STATISTICS"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "RREC統計情報",
+                "type": "object",
+                "properties": [
+                  {
+                    "type": "ref:statistics"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "case": ["HELLO_STATISTICS"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "HELLO統計情報",
+                "type": "object",
+                "properties": [
+                  {
+                    "type": "ref:statistics"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "case": ["PREFERRED_PARENT_NODE"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "優先送信先の設定",
+                "type": "object",
+                "properties": [
+                  {
+                    "name": "count",
+                    "description": "優先送信先の数",
+                    "type": "int",
+                    "length": 1
+                  },
+                  {
+                    "name": "addresses",
+                    "description": "優先送信先アドレス",
+                    "type": "array",
+                    "items": {
+                      "name": "short_address",
+                      "description": "ショートアドレス",
+                      "type": "hex",
+                      "length": 2,
+                      "byteorder": "little"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "case": ["DELETE_UNREACHABLE_NEIGHBOR_INFO"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "送信失敗時の隣接情報削除",
+                "type": "bool",
+                "length": 1,
+                "true-value": "03",
+                "false-value": "02"
+              }
+            ]
+          },
+          {
+            "case": ["CHANNEL"],
+            "parameters": [
+              {
+                "name": "reserved",
+                "description": "（固定値）",
+                "type": "hex",
+                "length": 1,
+                "value": "01"
+              },
+              {
+                "name": "value",
+                "description": "無線チャネル",
+                "type": "int",
+                "length": 1
+              }
+            ]
+          },
+          {
+            "case": ["PAN_ID"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "PAN ID",
+                "type": "hex",
+                "length": 2,
+                "byteorder": "little"
+              }
+            ]
+          },
+          {
+            "case": ["ENCRYPTION_KEY"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "暗号鍵",
+                "type": "hex",
+                "length": 16
+              }
+            ]
+          },
+          {
+            "case": ["HELLO_REQUEST_INTERVAL"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "HELLO要求設定",
+                "type": "int",
+                "length": 2,
+                "byteorder": "little"
+              },
+              {
+                "type": "select:value",
+                "cases": [
+                  {
+                    "case": [80],
+                    "parameters": [
+                      {
+                        "name": "reserved",
+                        "description": "（固定値）",
+                        "type": "hex",
+                        "length": 4,
+                        "value": "05000000"
+                      }
+                    ]
+                  },
+                  {
+                    "default": [
+                      {
+                        "name": "reserved",
+                        "description": "（固定値）",
+                        "type": "hex",
+                        "length": 4,
+                        "value": "14000000"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "case": ["ROUTE_EXPIRED"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "経路キャッシュ時間",
+                "type": "int",
+                "length": 4,
+                "byteorder": "little"
+              }
+            ]
+          },
+          {
+            "case": ["KEY_RENEWAL_INTERVAL"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "鍵更新設定",
+                "type": "int",
+                "length": 4,
+                "byteorder": "little"
+              }
+            ]
+          },
+          {
+            "case": ["TIME_SYNC"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "時刻同期設定",
+                "type": "object",
+                "properties": [
+                  {
+                    "name": "interval_unsync",
+                    "description": "時刻同期前の同期間隔",
+                    "type": "int",
+                    "length": 4
+                  },
+                  {
+                    "name": "jitter_unsync",
+                    "description": "時刻同期前のランダムジッタ",
+                    "type": "int",
+                    "length": 1
+                  },
+                  {
+                    "name": "interval_sync",
+                    "description": "時刻同期後の同期間隔",
+                    "type": "int",
+                    "length": 4
+                  },
+                  {
+                    "name": "jitter_sync",
+                    "description": "時刻同期後のランダムジッタ",
+                    "type": "int",
+                    "length": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "case": ["ENABLE_DATA_ENCRYPTION"],
+            "parameters": [
+              {
+                "name": "value",
+                "description": "ユーザデータ暗号化",
+                "type": "bool",
+                "length": 1,
+                "true-value": "0a",
+                "false-value": "0f"
+              }
+            ]
+          },
+          {
+            "default": [
+              {
+                "name": "value",
+                "description": "値",
+                "type": "bytes"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "time_info": [
+      {
+        "name": "time_sec",
+        "description": "絶対時刻を秒で表した値",
+        "type": "int",
+        "length": 8,
+        "byteorder": "little"
+      },
+      {
+        "name": "time_usec",
+        "description": "絶対時刻のマイクロ秒部分の位の値",
+        "type": "int",
+        "length": 4,
+        "byteorder": "little"
+      }
+    ],
+    "node_info": [
+      {
+        "name": "short_address",
+        "description": "ショートアドレス",
+        "type": "hex",
+        "length": 2,
+        "byteorder": "little"
+      },
+      {
+        "name": "mac_address",
+        "description": "MACアドレス",
+        "type": "hex",
+        "length": 8,
+        "byteorder": "little"
+      }
+    ],
+    "network_address": [
+      {
+        "name": "short_address",
+        "description": "ショートアドレス",
+        "type": "hex",
+        "length": 2,
+        "byteorder": "little"
+      },
+      {
+        "name": "pan_id",
+        "description": "PAN ID",
+        "type": "hex",
+        "length": 2,
+        "byteorder": "little"
+      }
+    ],
+    "statistics": [
+      {
+        "name": "tx_all",
+        "description": "中継を含む送信数",
+        "type": "int",
+        "length": 4,
+        "byteorder": "little"
+      },
+      {
+        "name": "rx_all",
+        "description": "中継を含む受信数",
+        "type": "int",
+        "length": 4,
+        "byteorder": "little"
+      },
+      {
+        "name": "tx_self",
+        "description": "自身を送信元とした送信数",
+        "type": "int",
+        "length": 4,
+        "byteorder": "little"
+      },
+      {
+        "name": "rx_self",
+        "description": "自身を送信先とした受信数",
+        "type": "int",
+        "length": 4,
+        "byteorder": "little"
+      },
+      {
+        "name": "drop",
+        "description": "廃棄数",
+        "type": "int",
+        "length": 4,
+        "byteorder": "little"
+      }
+    ]
+  }
+}

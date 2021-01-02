@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://github.com/556adarah/smarthop/blob/main/smarthop/schemas/sr920_config.schema.json",
+  "title": "OKI SmartHop SR920 module configuration schema",
+  "properties": {
+    "TX_POWER": {
+      "type": "string",
+      "title": "送信出力",
+      "enum": ["TX_1mW", "TX_20mW"],
+      "default": "TX_1mW"
+    },
+    "LED": {
+      "type": "boolean",
+      "title": "LED設定",
+      "default": false
+    },
+    "DUMMY_SIZE": {
+      "type": "integer",
+      "title": "UART通信におけるDummy部サイズ",
+      "maximum": 1024,
+      "minimum": 0,
+      "default": 8
+    },
+    "AUTO_START": {
+      "type": "boolean",
+      "title": "NWK自動スタート設定",
+      "default": false
+    },
+    "NODE_TYPE": {
+      "type": "string",
+      "title": "ノードタイプ",
+      "enum": ["COORDINATOR", "ROUTER", "SLEEP_COORDINATOR", "SLEEP_ROUTER"],
+      "default": "SLEEP_ROUTER"
+    },
+    "CHANNEL": {
+      "type": "integer",
+      "title": "無線チャネル",
+      "maximum": 60,
+      "minimum": 33,
+      "default": 33
+    },
+    "PAN_ID": {
+      "type": "string",
+      "title": "PAN ID",
+      "pattern": "^[0-9a-fA-F]{4}$",
+      "default": "0001"
+    },
+    "ENCRYPTION_KEY": {
+      "type": "string",
+      "title": "暗号鍵",
+      "pattern": "^[0-9a-fA-F]{32}$",
+      "default": "00000000000000000000000000000001"
+    },
+    "ENABLE_TIME_SYNC": {
+      "type": "boolean",
+      "title": "時刻同期設定",
+      "default": false
+    },
+    "OPERATION_MODE": {
+      "type": "string",
+      "title": "動作モード",
+      "enum": ["POWER_SAVING", "BALANCE", "LOW_LATENCY", "NON_SLEEP"],
+      "default": "LOW_LATENCY"
+    },
+    "FIXED_ADDRESSES": {
+      "type": "object",
+      "title": "固定アドレス設定",
+      "patternProperties": {
+        "^[0-9a-fA-F]{4}$": {
+          "type": "string",
+          "title": "MACアドレス",
+          "pattern": "^[0-9a-fA-F]{16}$"
+        }
+      }
+    },
+    "additionalProperties": true
+  }
+}
