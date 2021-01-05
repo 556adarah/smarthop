@@ -289,6 +289,10 @@ class SR920(contextlib.AbstractContextManager):
         configs = {}
 
         for json_key in json_data:
+            # ignore item started with $
+            if json_key.startswith("$"):
+                continue
+
             json_value = json_data[json_key]
 
             if json_key in ["NODE_TYPE", "TX_POWER"]:
