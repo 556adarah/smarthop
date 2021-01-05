@@ -100,7 +100,8 @@ class SR920NetworkMode(enum.Enum):
 
 
 class SR920NetworkState(enum.Enum):
-    """Represents a network state used in the NETWORK_STATE_CHANGED_NOTIFICATION command."""
+    """Represents a network state used in the NETWORK_STATE_CHANGED_NOTIFICATION
+    command."""
 
     ADDRESS_CHANGED = 0x00
     MODULE_INITIALIZED = 0x02
@@ -109,7 +110,8 @@ class SR920NetworkState(enum.Enum):
 
 
 class SR920NodeListType(enum.Enum):
-    """Represents a type of node list used in the GET_NODE_LIST_REQUEST/RESPONSE command."""
+    """Represents a type of node list used in the GET_NODE_LIST_REQUEST/RESPONSE
+    command."""
 
     FIXED_ADDRESS = 0x00
     DYNAMIC_ADDRESS = 0x01
@@ -127,6 +129,7 @@ class SR920FixedAddressControlMode(enum.Enum):
 
 
 class SR920TxPower(enum.Enum):
+    # pylint: disable=invalid-name
     """Represents a transmission power in the TX_POWER configuration."""
 
     TX_1mW = 0x01

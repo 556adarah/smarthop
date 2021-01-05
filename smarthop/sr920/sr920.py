@@ -12,13 +12,13 @@ import jsonschema
 import serial
 from serial import threaded
 
-from . import command, enums, protocol
+from smarthop import sr920
+from smarthop.sr920 import protocol
 
 _logger = logging.getLogger(__name__)
 
 
 class SR920(contextlib.AbstractContextManager):
-    # pylint: disable=too-many-public-methods
     """Represents the OKI SmartHop SR module API wrappper.
 
     Args:
@@ -71,7 +71,7 @@ class SR920(contextlib.AbstractContextManager):
 
         if not self._version:
             response = self.get_response(
-                command.SR920Command(enums.SR920CommandId.GET_VERSION_REQUEST)
+                sr920.SR920Command(sr920.SR920CommandId.GET_VERSION_REQUEST)
             )
 
             if response and response.parameters["result"] == 0x00:
@@ -140,7 +140,7 @@ class SR920(contextlib.AbstractContextManager):
         )
 
         request_id = request.command_id
-        response_id = enums.SR920CommandId(request_id.value + 1)
+        response_id = sr920.SR920CommandId(request_id.value + 1)
 
         self._protocol.send_command(request)
 
@@ -188,13 +188,13 @@ class SR920(contextlib.AbstractContextManager):
         )
 
         request_id = (
-            enums.SR920CommandId.READ_RAM_CONFIG_REQUEST
+            sr920.SR920CommandId.READ_RAM_CONFIG_REQUEST
             if read_from == "ram"
-            else enums.SR920CommandId.READ_CONFIG_REQUEST
+            else sr920.SR920CommandId.READ_CONFIG_REQUEST
         )
         parameters = {"config_id": config_id}
 
-        response = self.get_response(command.SR920Command(request_id, parameters))
+        response = self.get_response(sr920.SR920Command(request_id, parameters))
 
         if response and response.parameters["result"] == 0:
             return response.parameters["value"]
@@ -221,13 +221,13 @@ class SR920(contextlib.AbstractContextManager):
         )
 
         request_id = (
-            enums.SR920CommandId.WRITE_RAM_CONFIG_REQUEST
+            sr920.SR920CommandId.WRITE_RAM_CONFIG_REQUEST
             if write_to == "ram"
-            else enums.SR920CommandId.WRITE_CONFIG_REQUEST
+            else sr920.SR920CommandId.WRITE_CONFIG_REQUEST
         )
         parameters = {"config_id": config_id, "value": value}
 
-        return self._simple_response(command.SR920Command(request_id, parameters))
+        return self._simple_response(sr920.SR920Command(request_id, parameters))
 
     def save_config(self):
         """Saves configurations to Flash.
@@ -238,7 +238,7 @@ class SR920(contextlib.AbstractContextManager):
         _logger.debug("enter save_config()")
 
         return self._simple_response(
-            command.SR920Command(enums.SR920CommandId.SAVE_CONFIG_REQUEST)
+            sr920.SR920Command(sr920.SR920CommandId.SAVE_CONFIG_REQUEST)
         )
 
     def reset_config(self):
@@ -250,11 +250,10 @@ class SR920(contextlib.AbstractContextManager):
         _logger.debug("enter reset_config()")
 
         return self._simple_response(
-            command.SR920Command(enums.SR920CommandId.RESET_CONFIG_REQUEST)
+            sr920.SR920Command(sr920.SR920CommandId.RESET_CONFIG_REQUEST)
         )
 
     def load_config(self, config_file, write_to="ram"):
-        # pylint: disable=too-many-locals, too-many-branches
         """Loads configurations from the specified configuration file.
 
         Args:
@@ -297,11 +296,11 @@ class SR920(contextlib.AbstractContextManager):
 
             if json_key in ["NODE_TYPE", "TX_POWER"]:
                 try:
-                    config_id = enums.SR920ConfigId[json_key]
+                    config_id = sr920.SR920ConfigId[json_key]
                     config_value = (
-                        enums.SR920NodeType[json_value]
+                        sr920.SR920NodeType[json_value]
                         if json_key == "NODE_TYPE"
-                        else enums.SR920TxPower[json_value]
+                        else sr920.SR920TxPower[json_value]
                     )
 
                     configs[config_id] = config_value
@@ -312,7 +311,7 @@ class SR920(contextlib.AbstractContextManager):
                 configs[json_key] = json_value
             else:
                 try:
-                    config_id = enums.SR920ConfigId[json_key]
+                    config_id = sr920.SR920ConfigId[json_key]
                     config_value = json_value
 
                     configs[config_id] = config_value
@@ -324,15 +323,15 @@ class SR920(contextlib.AbstractContextManager):
         if "OPERATION_MODE" in configs:
             try:
                 value = configs.pop("OPERATION_MODE")
-                mode = enums.SR920OperationMode[value]
+                mode = sr920.SR920OperationMode[value]
             except KeyError:
                 _logger.error("invalid value: %s", value)
                 return False
 
             node_type = (
-                configs[enums.SR920ConfigId.NODE_TYPE]
-                if enums.SR920ConfigId.NODE_TYPE in configs
-                else enums.SR920NodeType.SLEEP_ROUTER
+                configs[sr920.SR920ConfigId.NODE_TYPE]
+                if sr920.SR920ConfigId.NODE_TYPE in configs
+                else sr920.SR920NodeType.SLEEP_ROUTER
             )
             time_sync = (
                 configs.pop("ENABLE_TIME_SYNC")
@@ -347,10 +346,10 @@ class SR920(contextlib.AbstractContextManager):
         _logger.debug("configs: %s", configs)
 
         # NODE_TYPE should be configured at first
-        if enums.SR920ConfigId.NODE_TYPE in configs:
+        if sr920.SR920ConfigId.NODE_TYPE in configs:
             self.write_config(
-                enums.SR920ConfigId.NODE_TYPE,
-                configs.pop(enums.SR920ConfigId.NODE_TYPE),
+                sr920.SR920ConfigId.NODE_TYPE,
+                configs.pop(sr920.SR920ConfigId.NODE_TYPE),
                 write_to,
             )
 
@@ -359,12 +358,12 @@ class SR920(contextlib.AbstractContextManager):
 
             for short_address in fixed:
                 self.control_fixed_address(
-                    enums.SR920FixedAddressControlMode.ADD,
+                    sr920.SR920FixedAddressControlMode.ADD,
                     short_address=short_address,
                     mac_address=fixed[short_address],
                 )
 
-            self.control_fixed_address(enums.SR920FixedAddressControlMode.SAVE)
+            self.control_fixed_address(sr920.SR920FixedAddressControlMode.SAVE)
 
         for config_id in configs:
             self.write_config(config_id, configs[config_id], write_to)
@@ -372,7 +371,6 @@ class SR920(contextlib.AbstractContextManager):
         return True
 
     def send_data(self, data, destination="0001", nor=3, security=True, ttl=32):
-        # pylint: disable=too-many-arguments
         """Sends the specified data with the specified conditions.
 
         Args:
@@ -406,7 +404,7 @@ class SR920(contextlib.AbstractContextManager):
 
             return False
 
-        request_id = enums.SR920CommandId.SEND_DATA_REQUEST
+        request_id = sr920.SR920CommandId.SEND_DATA_REQUEST
         parameters = {
             "destination": destination,
             "source": source,
@@ -417,10 +415,10 @@ class SR920(contextlib.AbstractContextManager):
         }
 
         return self._simple_response(
-            command.SR920Command(request_id, parameters), timeout=2
+            sr920.SR920Command(request_id, parameters), timeout=2
         )
 
-    def start(self, mode=enums.SR920NetworkMode.START_NETWORK):
+    def start(self, mode=None):
         """Starts network operation with the specified mode.
 
         Args:
@@ -432,10 +430,10 @@ class SR920(contextlib.AbstractContextManager):
         """
         _logger.debug("enter start(): mode=%s", mode)
 
-        request_id = enums.SR920CommandId.START_NETWORK_REQUEST
-        parameters = {"mode": mode}
+        request_id = sr920.SR920CommandId.START_NETWORK_REQUEST
+        parameters = {"mode": mode if mode else sr920.SR920NetworkMode.START_NETWORK}
 
-        return self._simple_response(command.SR920Command(request_id, parameters))
+        return self._simple_response(sr920.SR920Command(request_id, parameters))
 
     def reset(self):
         """Resets the module.
@@ -446,7 +444,7 @@ class SR920(contextlib.AbstractContextManager):
         _logger.debug("enter reset()")
 
         return self._simple_response(
-            command.SR920Command(enums.SR920CommandId.RESET_REQUEST)
+            sr920.SR920Command(sr920.SR920CommandId.RESET_REQUEST)
         )
 
     def set_time(self, time_to_set=None):
@@ -466,7 +464,7 @@ class SR920(contextlib.AbstractContextManager):
 
         _logger.debug("time_to_set=%s", time_to_set)
 
-        request_id = enums.SR920CommandId.SET_TIME_REQUEST
+        request_id = sr920.SR920CommandId.SET_TIME_REQUEST
 
         time_sec = math.floor(time_to_set)
         time_usec = math.floor((time_to_set - time_sec) * 2 ** 32)
@@ -476,7 +474,7 @@ class SR920(contextlib.AbstractContextManager):
             "time_usec": time_usec,
         }
 
-        return self._simple_response(command.SR920Command(request_id, parameters))
+        return self._simple_response(sr920.SR920Command(request_id, parameters))
 
     def get_time(self):
         """Gets the time from the module.
@@ -488,7 +486,7 @@ class SR920(contextlib.AbstractContextManager):
         _logger.debug("enter get_time()")
 
         response = self.get_response(
-            command.SR920Command(enums.SR920CommandId.GET_TIME_REQUEST)
+            sr920.SR920Command(sr920.SR920CommandId.GET_TIME_REQUEST)
         )
 
         if response and response.parameters["result"] == 0x00:
@@ -519,10 +517,10 @@ class SR920(contextlib.AbstractContextManager):
             "enter get_node_list(): list_type=%s, seq_no=%s", list_type, seq_no
         )
 
-        request_id = enums.SR920CommandId.GET_NODE_LIST_REQUEST
+        request_id = sr920.SR920CommandId.GET_NODE_LIST_REQUEST
         parameters = {"list_type": list_type, "seq_no": seq_no}
 
-        response = self.get_response(command.SR920Command(request_id, parameters))
+        response = self.get_response(sr920.SR920Command(request_id, parameters))
 
         if response:
             result = response.parameters["result"]
@@ -545,16 +543,16 @@ class SR920(contextlib.AbstractContextManager):
                 Should not specify any value by user.
 
         Returns:
-            A list object containing the link information that consists of short address pair
-            for the child/parent nodes.
+            A list object containing the link information that consists of short
+            address pair for the child/parent nodes.
             Or returns None if failed to get.
         """
         _logger.debug("enter get_link_list(): seq_no=%s", seq_no)
 
-        request_id = enums.SR920CommandId.GET_LINK_LIST_REQUEST
+        request_id = sr920.SR920CommandId.GET_LINK_LIST_REQUEST
         parameters = {"seq_no": seq_no}
 
-        response = self.get_response(command.SR920Command(request_id, parameters))
+        response = self.get_response(sr920.SR920Command(request_id, parameters))
 
         if response:
             result = response.parameters["result"]
@@ -573,19 +571,20 @@ class SR920(contextlib.AbstractContextManager):
         """Gets a route information to the specified node.
 
         Args:
-            target: A hexadecimal string representing a short address of the target node.
+            target: A hexadecimal string representing a short address of the target
+                node.
 
         Returns:
-            A list object representing the route information that consists of short addresses
-            from the target node to the coordinator.
+            A list object representing the route information that consists of short
+            addresses from the target node to the coordinator.
             Or returns None if failed to get.
         """
         _logger.debug("enter check_route(): target=%s", target)
 
-        request_id = enums.SR920CommandId.GET_ROUTE_REQUEST
+        request_id = sr920.SR920CommandId.GET_ROUTE_REQUEST
         parameters = {"target": target}
 
-        response = self.get_response(command.SR920Command(request_id, parameters))
+        response = self.get_response(sr920.SR920Command(request_id, parameters))
 
         if response and response.parameters["result"] == 0x00:
             return response.parameters["route_info"]
@@ -596,7 +595,8 @@ class SR920(contextlib.AbstractContextManager):
         """Gets the result of RTT measurement with the specified node.
 
         Args:
-            target: A hexadecimal string representing a short address of the target node.
+            target: A hexadecimal string representing a short address of the target
+                node.
             length: A data length to send. (in bytes)
                 Uses 30 bytes length, if not specified.
 
@@ -606,11 +606,11 @@ class SR920(contextlib.AbstractContextManager):
         """
         _logger.debug("enter measure_rtt(): target=%s, length=%s", target, legnth)
 
-        request_id = enums.SR920CommandId.MEASURE_RTT_REQUEST
+        request_id = sr920.SR920CommandId.MEASURE_RTT_REQUEST
         parameters = {"target": target, "length": legnth}
 
         response = self.get_response(
-            command.SR920Command(request_id, parameters), timeout=2
+            sr920.SR920Command(request_id, parameters), timeout=2
         )
 
         if response and response.parameters["result"] == 0x00:
@@ -623,10 +623,12 @@ class SR920(contextlib.AbstractContextManager):
         return None
 
     def get_neighbor_info(self, target=None):
-        """Gets a list of neighbor information of the specified node or the module itself.
+        """Gets a list of neighbor information of the specified node or the module
+        itself.
 
         Args:
-            target: A hexadecimal string representing a short address of the target node.
+            target: A hexadecimal string representing a short address of the target
+                node.
                 Should not specify any value, if the module is a router, then neighbor
                 information of the module itself will be returned.
 
@@ -637,14 +639,14 @@ class SR920(contextlib.AbstractContextManager):
         _logger.debug("enter get_neighbor_info(): target=%s", target)
 
         if target:
-            request_id = enums.SR920CommandId.GET_NEIGHBOR_INFO_REQUEST
+            request_id = sr920.SR920CommandId.GET_NEIGHBOR_INFO_REQUEST
             parameters = {"target": target}
         else:
-            request_id = enums.SR920CommandId.GET_MY_NEIGHBOR_INFO_REQUEST
+            request_id = sr920.SR920CommandId.GET_MY_NEIGHBOR_INFO_REQUEST
             parameters = {}
 
         response = self.get_response(
-            command.SR920Command(request_id, parameters), timeout=2
+            sr920.SR920Command(request_id, parameters), timeout=2
         )
 
         if response and response.parameters["result"] == 0x00:
@@ -672,26 +674,27 @@ class SR920(contextlib.AbstractContextManager):
             mac_address,
         )
 
-        request_id = enums.SR920CommandId.CONTROL_FIXED_ADDRESS_REQUEST
+        request_id = sr920.SR920CommandId.CONTROL_FIXED_ADDRESS_REQUEST
         parameters = {
             "mode": mode,
             "short_address": short_address or "0000",
             "mac_address": mac_address or "0000000000000000",
         }
 
-        return self._simple_response(command.SR920Command(request_id, parameters))
+        return self._simple_response(sr920.SR920Command(request_id, parameters))
 
     def get_network_address(self):
         """Gets network information related to the current network.
 
         Returns:
-            A dict object containing short address, PAN ID and coordinator's short address.
+            A dict object containing short address, PAN ID and coordinator's short
+            address.
             Or returns None if failed to get.
         """
         _logger.debug("enter get_network_address()")
 
         response = self.get_response(
-            command.SR920Command(enums.SR920CommandId.GET_NETWORK_ADDRESS_REQUEST)
+            sr920.SR920Command(sr920.SR920CommandId.GET_NETWORK_ADDRESS_REQUEST)
         )
 
         if response and response.parameters.pop("result") == 0x00:
@@ -734,67 +737,67 @@ class SR920(contextlib.AbstractContextManager):
 
         configs = None
 
-        if mode == enums.SR920OperationMode.POWER_SAVING:
+        if mode == sr920.SR920OperationMode.POWER_SAVING:
             configs = {
-                enums.SR920ConfigId.PARENT_SELECTION_MODE: b"\x00",  # low speed
-                enums.SR920ConfigId.HELLO_INTERVAL: b"\x4b",  # 3.7h
-                enums.SR920ConfigId.RREC_INTERVAL: b"\x41",  # 51min
-                enums.SR920ConfigId.UPLINK_RETRY: 2,
-                enums.SR920ConfigId.DOWNLINK_RETRY: 2,
-                enums.SR920ConfigId.SLEEP_INTERVAL: 100,  # 2sec
-                enums.SR920ConfigId.HELLO_REQUEST_INTERVAL: 80,
-                enums.SR920ConfigId.ROUTE_EXPIRED: 12240000,  # 3.4h
-                enums.SR920ConfigId.TIME_SYNC: {
+                sr920.SR920ConfigId.PARENT_SELECTION_MODE: b"\x00",  # low speed
+                sr920.SR920ConfigId.HELLO_INTERVAL: b"\x4b",  # 3.7h
+                sr920.SR920ConfigId.RREC_INTERVAL: b"\x41",  # 51min
+                sr920.SR920ConfigId.UPLINK_RETRY: 2,
+                sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
+                sr920.SR920ConfigId.SLEEP_INTERVAL: 100,  # 2sec
+                sr920.SR920ConfigId.HELLO_REQUEST_INTERVAL: 80,
+                sr920.SR920ConfigId.ROUTE_EXPIRED: 12240000,  # 3.4h
+                sr920.SR920ConfigId.TIME_SYNC: {
                     "interval_unsync": 3600,  # 1h
                     "jitter_unsync": 255,
                     "interval_sync": 36000,  # 10h
                     "jitter_sync": 255,
                 },
             }
-        elif mode == enums.SR920OperationMode.BALANCE:
+        elif mode == sr920.SR920OperationMode.BALANCE:
             configs = {
-                enums.SR920ConfigId.PARENT_SELECTION_MODE: b"\x00",  # low speed
-                enums.SR920ConfigId.HELLO_INTERVAL: b"\x40",  # 34.1min
-                enums.SR920ConfigId.RREC_INTERVAL: b"\x3f",  # 17.5min
-                enums.SR920ConfigId.UPLINK_RETRY: 2,
-                enums.SR920ConfigId.DOWNLINK_RETRY: 2,
-                enums.SR920ConfigId.SLEEP_INTERVAL: 25,  # 500msec
-                enums.SR920ConfigId.HELLO_REQUEST_INTERVAL: 15,
-                enums.SR920ConfigId.ROUTE_EXPIRED: 4320000,  # 1.2h
-                enums.SR920ConfigId.TIME_SYNC: {
+                sr920.SR920ConfigId.PARENT_SELECTION_MODE: b"\x00",  # low speed
+                sr920.SR920ConfigId.HELLO_INTERVAL: b"\x40",  # 34.1min
+                sr920.SR920ConfigId.RREC_INTERVAL: b"\x3f",  # 17.5min
+                sr920.SR920ConfigId.UPLINK_RETRY: 2,
+                sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
+                sr920.SR920ConfigId.SLEEP_INTERVAL: 25,  # 500msec
+                sr920.SR920ConfigId.HELLO_REQUEST_INTERVAL: 15,
+                sr920.SR920ConfigId.ROUTE_EXPIRED: 4320000,  # 1.2h
+                sr920.SR920ConfigId.TIME_SYNC: {
                     "interval_unsync": 1800,  # 30min
                     "jitter_unsync": 255,
                     "interval_sync": 10800,  # 3h
                     "jitter_sync": 255,
                 },
             }
-        elif mode == enums.SR920OperationMode.LOW_LATENCY:
+        elif mode == sr920.SR920OperationMode.LOW_LATENCY:
             configs = {
-                enums.SR920ConfigId.PARENT_SELECTION_MODE: b"\x01",  # high speed
-                enums.SR920ConfigId.HELLO_INTERVAL: b"\x30",  # 9.6min
-                enums.SR920ConfigId.RREC_INTERVAL: b"\x2b",  # 7min
-                enums.SR920ConfigId.UPLINK_RETRY: 2,
-                enums.SR920ConfigId.DOWNLINK_RETRY: 2,
-                enums.SR920ConfigId.SLEEP_INTERVAL: 5,  # 100msec
-                enums.SR920ConfigId.HELLO_REQUEST_INTERVAL: 15,
-                enums.SR920ConfigId.ROUTE_EXPIRED: 1680000,  # 28min
-                enums.SR920ConfigId.TIME_SYNC: {
+                sr920.SR920ConfigId.PARENT_SELECTION_MODE: b"\x01",  # high speed
+                sr920.SR920ConfigId.HELLO_INTERVAL: b"\x30",  # 9.6min
+                sr920.SR920ConfigId.RREC_INTERVAL: b"\x2b",  # 7min
+                sr920.SR920ConfigId.UPLINK_RETRY: 2,
+                sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
+                sr920.SR920ConfigId.SLEEP_INTERVAL: 5,  # 100msec
+                sr920.SR920ConfigId.HELLO_REQUEST_INTERVAL: 15,
+                sr920.SR920ConfigId.ROUTE_EXPIRED: 1680000,  # 28min
+                sr920.SR920ConfigId.TIME_SYNC: {
                     "interval_unsync": 600,  # 10min
                     "jitter_unsync": 180,
                     "interval_sync": 3600,  # 1h
                     "jitter_sync": 180,
                 },
             }
-        elif mode == enums.SR920OperationMode.NON_SLEEP:
+        elif mode == sr920.SR920OperationMode.NON_SLEEP:
             configs = {
-                enums.SR920ConfigId.PARENT_SELECTION_MODE: b"\x01",  # high speed
-                enums.SR920ConfigId.HELLO_INTERVAL: b"\x20",  # 1.1min
-                enums.SR920ConfigId.RREC_INTERVAL: b"\x23",  # 2.6min
-                enums.SR920ConfigId.UPLINK_RETRY: 2,
-                enums.SR920ConfigId.DOWNLINK_RETRY: 2,
-                enums.SR920ConfigId.HELLO_REQUEST_INTERVAL: 15,
-                enums.SR920ConfigId.ROUTE_EXPIRED: 600000,  # 10min
-                enums.SR920ConfigId.TIME_SYNC: {
+                sr920.SR920ConfigId.PARENT_SELECTION_MODE: b"\x01",  # high speed
+                sr920.SR920ConfigId.HELLO_INTERVAL: b"\x20",  # 1.1min
+                sr920.SR920ConfigId.RREC_INTERVAL: b"\x23",  # 2.6min
+                sr920.SR920ConfigId.UPLINK_RETRY: 2,
+                sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
+                sr920.SR920ConfigId.HELLO_REQUEST_INTERVAL: 15,
+                sr920.SR920ConfigId.ROUTE_EXPIRED: 600000,  # 10min
+                sr920.SR920ConfigId.TIME_SYNC: {
                     "interval_unsync": 10,
                     "jitter_unsync": 5,
                     "interval_sync": 10,
@@ -803,10 +806,10 @@ class SR920(contextlib.AbstractContextManager):
             }
 
         if configs and node_type.is_router():
-            del configs[enums.SR920ConfigId.ROUTE_EXPIRED]
+            del configs[sr920.SR920ConfigId.ROUTE_EXPIRED]
 
         if configs and not time_sync:
-            configs[enums.SR920ConfigId.TIME_SYNC] = {
+            configs[sr920.SR920ConfigId.TIME_SYNC] = {
                 "interval_unsync": 0,
                 "jitter_unsync": 0,
                 "interval_sync": 0,
