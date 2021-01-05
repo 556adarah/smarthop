@@ -159,4 +159,3 @@ class SR920OperationMode(enum.Enum):
     BALANCE = 0x02
     LOW_LATENCY = 0x03
     NON_SLEEP = 0x04
-    CUSTOM = 0xFF
