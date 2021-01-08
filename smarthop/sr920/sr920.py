@@ -178,7 +178,7 @@ class SR920(contextlib.AbstractContextManager):
                 otherwise from Flash.
 
         Returns:
-            A bytes object representing a configuration value.
+            An object representing a configuration value.
             Or returns None if configuration is not defined or command is failed.
         """
         _logger.debug(
@@ -206,7 +206,7 @@ class SR920(contextlib.AbstractContextManager):
 
         Args:
             config_id: A value of the SR920ConfigId enum.
-            value: A bytes object representing a configuration value.
+            value: An object representing a configuration value.
             write_to: Configuration will be written to RAM if "ram" is specified,
                 otherwise to Flash.
 
@@ -370,7 +370,7 @@ class SR920(contextlib.AbstractContextManager):
 
         return True
 
-    def send_data(self, data, destination="0001", nor=3, security=True, ttl=32):
+    def send_data(self, data, destination="0001", nor=3, security=True, ttl=30):
         """Sends the specified data with the specified conditions.
 
         Args:
@@ -382,7 +382,7 @@ class SR920(contextlib.AbstractContextManager):
                 Uses 3 times, if not specified.
             security: True if security is on, otherwise False.
             ttl: A value of TTL (Time to Live).
-                Uses 32 hops that equals to the maximum hop count, if not specified.
+                Uses 30 hops that equals to the maximum hop count, if not specified.
 
         Returns:
             True if succeeded to send data, otherwise False.
@@ -409,7 +409,7 @@ class SR920(contextlib.AbstractContextManager):
             "destination": destination,
             "source": source,
             "nor": nor,
-            "security": 0x0C if security else 0x00,
+            "security": security,
             "ttl": ttl,
             "data": data,
         }
@@ -447,6 +447,31 @@ class SR920(contextlib.AbstractContextManager):
             sr920.SR920Command(sr920.SR920CommandId.RESET_REQUEST)
         )
 
+    def get_time(self):
+        """Gets the time from the module.
+
+        Returns:
+            A time in seconds since the epoch as float.
+            Or returns None if failed.
+        """
+        _logger.debug("enter get_time()")
+
+        response = self.get_response(
+            sr920.SR920Command(sr920.SR920CommandId.GET_TIME_REQUEST)
+        )
+
+        if response and response.parameters["result"] == 0x00:
+            time_sec = response.parameters["time_sec"]
+            time_usec = response.parameters["time_usec"]
+
+            time_got = time_sec + time_usec / 2 ** 32
+
+            _logger.debug("time_got=%s", time_got)
+
+            return time_got
+
+        return None
+
     def set_time(self, time_to_set=None):
         """Sets the specified time to the module.
 
@@ -475,31 +500,6 @@ class SR920(contextlib.AbstractContextManager):
         }
 
         return self._simple_response(sr920.SR920Command(request_id, parameters))
-
-    def get_time(self):
-        """Gets the time from the module.
-
-        Returns:
-            A time in seconds since the epoch as float.
-            Or returns None if failed.
-        """
-        _logger.debug("enter get_time()")
-
-        response = self.get_response(
-            sr920.SR920Command(sr920.SR920CommandId.GET_TIME_REQUEST)
-        )
-
-        if response and response.parameters["result"] == 0x00:
-            time_sec = response.parameters["time_sec"]
-            time_usec = response.parameters["time_usec"]
-
-            time_got = time_sec + time_usec / 2 ** 32
-
-            _logger.debug("time_got=%s", time_got)
-
-            return time_got
-
-        return None
 
     def get_node_list(self, list_type, seq_no=1):
         """Gets a list of node information.
