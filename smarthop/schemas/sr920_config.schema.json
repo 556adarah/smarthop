@@ -7,7 +7,7 @@
       "type": "string",
       "title": "送信出力",
       "enum": ["TX_1mW", "TX_20mW"],
-      "default": "TX_1mW"
+      "default": "TX_20mW"
     },
     "LED": {
       "type": "boolean",

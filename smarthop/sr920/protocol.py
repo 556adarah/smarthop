@@ -9,7 +9,7 @@ import threading
 import serial
 from serial import threaded
 
-from . import command
+from smarthop import sr920
 
 _logger = logging.getLogger(__name__)
 
@@ -53,7 +53,8 @@ class SR920Protocol(threaded.Protocol):
 
     # overrides serial.threaded.Protocol.connection_lost()
     def connection_lost(self, exc):
-        """Called when the serial port is closed or the reader loop terminated otherwise.
+        """Called when the serial port is closed or the reader loop terminated
+        otherwise.
 
         Args:
             exc: Exception if connection was terminated by error, otherwise None.
@@ -86,7 +87,7 @@ class SR920Protocol(threaded.Protocol):
             elif self._in_command:
                 if byte == SR920Protocol.SYN:
                     unescaped = SR920Protocol._unescape(self._buffer)
-                    cmd_received = command.SR920Command.parse(unescaped)
+                    cmd_received = sr920.SR920Command.parse(unescaped)
 
                     _logger.info("command received: %s", cmd_received)
 
@@ -101,7 +102,8 @@ class SR920Protocol(threaded.Protocol):
                 if byte in (SR920Protocol.DMY, SR920Protocol.SYN):
                     if len(self._buffer) > 0:
                         _logger.warning(
-                            "ignore buffers received before dummy header or command: %s",
+                            "ignore buffers received "
+                            "before dummy header or command: %s",
                             self._buffer,
                         )
 

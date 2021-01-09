@@ -5,7 +5,7 @@ import json
 import logging
 import pkgutil
 
-from . import enums
+from smarthop import sr920
 
 _logger = logging.getLogger(__name__)
 
@@ -50,14 +50,16 @@ class SR920Command:
         """
         _logger.debug("enter to_bytes()")
 
-        command = self.command_id.value.to_bytes(2, "big")
+        command = bytearray(self.command_id.value.to_bytes(2, "big"))
 
         if not self._template:
             self._template = SR920Command._get_template(self.command_id)
 
         if self._template and "parameters" in self._template:
-            command += SR920Command._pack_parameters(
-                self.parameters, self._template["parameters"]
+            command.extend(
+                SR920Command._pack_parameters(
+                    self.parameters, self._template["parameters"]
+                )
             )
 
         return command
@@ -74,7 +76,7 @@ class SR920Command:
         """
         _logger.debug("enter parse(): data=%s", data)
 
-        command_id = enums.SR920CommandId(int.from_bytes(data[:2], byteorder="big"))
+        command_id = sr920.SR920CommandId(int.from_bytes(data[:2], byteorder="big"))
         parameters = {}
 
         payload = data[2:] if len(data) > 2 else None
@@ -99,7 +101,6 @@ class SR920Command:
 
     @classmethod
     def _pack_parameters(cls, parameters, templates):
-        # pylint: disable=too-many-branches, too-many-statements, too-many-locals
         _logger.debug(
             "enter _pack_parameters(): parameters=%s, templates=%s",
             parameters,
@@ -113,8 +114,9 @@ class SR920Command:
 
             if temp_type.startswith("select:"):
                 if temp_type[7:] not in parameters:
-                    _logger.error("select variable not found: %s", temp_type[7:])
-                    raise AttributeError
+                    raise AttributeError(
+                        "select variable not found: %s" % temp_type[7:]
+                    )
 
                 param_case = parameters[temp_type[7:]]
 
@@ -141,8 +143,7 @@ class SR920Command:
 
             if temp_type.startswith("ref:"):
                 if temp_type[4:] not in _templates["definitions"]:
-                    _logger.error("reference not found: %s", temp_type[4:])
-                    raise AttributeError
+                    raise AttributeError("reference not found: %s" % temp_type[4:])
 
                 reference = _templates["definitions"][temp_type[4:]]
 
@@ -154,8 +155,7 @@ class SR920Command:
                 param_value = template["value"]
             else:
                 if template["name"] not in parameters:
-                    _logger.error("parameter not found: %s", template["name"])
-                    raise AttributeError
+                    raise AttributeError("parameter not found: %s" % template["name"])
 
                 param_value = parameters[template["name"]]
 
@@ -206,7 +206,6 @@ class SR920Command:
 
     @classmethod
     def _unpack_parameters(cls, parameters, data, templates):
-        # pylint: disable=too-many-branches, too-many-statements, too-many-locals
         _logger.debug(
             "enter _unpack_parameters(): parameters=%s, data=%s, templates=%s",
             parameters,
@@ -219,8 +218,9 @@ class SR920Command:
 
             if temp_type.startswith("select:"):
                 if temp_type[7:] not in parameters:
-                    _logger.error("select variable not found: %s", temp_type[7:])
-                    raise AttributeError
+                    raise AttributeError(
+                        "select variable not found: %s" % temp_type[7:]
+                    )
 
                 param_case = parameters[temp_type[7:]]
 
@@ -249,8 +249,7 @@ class SR920Command:
 
             if temp_type.startswith("ref:"):
                 if temp_type[4:] not in _templates["definitions"]:
-                    _logger.error("reference not found: %s", temp_type[4:])
-                    raise AttributeError
+                    raise AttributeError("reference not found: %s" % temp_type[4:])
 
                 reference = _templates["definitions"][temp_type[4:]]
 
@@ -311,7 +310,7 @@ class SR920Command:
                     )
                     parameters[temp_name].extend(params.values())
             elif temp_type.startswith("enum:"):
-                enum_type = getattr(enums, temp_type[5:])
+                enum_type = getattr(sr920.enums, temp_type[5:])
                 parameters[temp_name] = enum_type(int.from_bytes(param_bytes, "big"))
             else:  # bytes
                 parameters[temp_name] = param_bytes
@@ -321,4 +320,7 @@ class SR920Command:
     def __str__(self):
         # _logger.debug("enter __str__()")
 
-        return f"SR920Command: {{command_id={self.command_id}, parameters={self.parameters}}}"
+        return "SR920Command: command_id=%s, parameters=%s" % (
+            self.command_id,
+            self.parameters,
+        )

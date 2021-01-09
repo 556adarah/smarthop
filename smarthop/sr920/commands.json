@@ -146,8 +146,10 @@
         {
           "name": "security",
           "description": "セキュリティ設定",
-          "type": "int",
-          "length": 1
+          "type": "bool",
+          "length": 1,
+          "true-value": "0c",
+          "false-value": "00"
         },
         {
           "name": "ttl",
@@ -209,8 +211,10 @@
         {
           "name": "security",
           "description": "セキュリティ設定",
-          "type": "int",
-          "length": 1
+          "type": "bool",
+          "length": 1,
+          "true-value": "0e",
+          "false-value": "02"
         },
         {
           "name": "data",
@@ -260,8 +264,10 @@
         {
           "name": "security",
           "description": "セキュリティ設定",
-          "type": "int",
-          "length": 1
+          "type": "bool",
+          "length": 1,
+          "true-value": "0e",
+          "false-value": "02"
         },
         {
           "name": "ttl",

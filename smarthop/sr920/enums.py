@@ -17,19 +17,19 @@ class SR920CommandId(enum.Enum):
     SEND_DATA_REQUEST = 0x07A0
     SEND_DATA_RESPONSE = 0x07A1
     DATA_RECEIVED_NOTIFICATION = 0x07A2
-    WRITE_RAM_CONFIG_REQUEST = 0x07A3
-    WRITE_RAM_CONFIG_RESPONSE = 0x07A4
     READ_RAM_CONFIG_REQUEST = 0x07A5
     READ_RAM_CONFIG_RESPONSE = 0x07A6
+    WRITE_RAM_CONFIG_REQUEST = 0x07A3
+    WRITE_RAM_CONFIG_RESPONSE = 0x07A4
     START_NETWORK_REQUEST = 0x07A7
     START_NETWORK_RESPONSE = 0x07A8
     NETWORK_STATE_CHANGED_NOTIFICATION = 0x07A9
     RESET_REQUEST = 0x07F0
     RESET_RESPONSE = 0x07F1
-    SET_TIME_REQUEST = 0x07F2
-    SET_TIME_RESPONSE = 0x07F3
     GET_TIME_REQUEST = 0x07F4
     GET_TIME_RESPONSE = 0x07F5
+    SET_TIME_REQUEST = 0x07F2
+    SET_TIME_RESPONSE = 0x07F3
     GET_VERSION_REQUEST = 0x07FA
     GET_VERSION_RESPONSE = 0x07FB
     GET_NODE_LIST_REQUEST = 0x0330
@@ -77,8 +77,8 @@ class SR920ConfigId(enum.Enum):
     SLEEP_INTERVAL = 0xBB
     UPLINK_STATISTICS = 0xBC
     DOWNLINK_STATISTICS = 0xBD
-    RREC_STATISTICS = 0xBE
     HELLO_STATISTICS = 0xBF
+    RREC_STATISTICS = 0xBE
     PREFERRED_PARENT_NODE = 0xC1
     DELETE_UNREACHABLE_NEIGHBOR_INFO = 0xC2
     CHANNEL = 0xC5
@@ -100,7 +100,8 @@ class SR920NetworkMode(enum.Enum):
 
 
 class SR920NetworkState(enum.Enum):
-    """Represents a network state used in the NETWORK_STATE_CHANGED_NOTIFICATION command."""
+    """Represents a network state used in the NETWORK_STATE_CHANGED_NOTIFICATION
+    command."""
 
     ADDRESS_CHANGED = 0x00
     MODULE_INITIALIZED = 0x02
@@ -109,7 +110,8 @@ class SR920NetworkState(enum.Enum):
 
 
 class SR920NodeListType(enum.Enum):
-    """Represents a type of node list used in the GET_NODE_LIST_REQUEST/RESPONSE command."""
+    """Represents a type of node list used in the GET_NODE_LIST_REQUEST/RESPONSE
+    command."""
 
     FIXED_ADDRESS = 0x00
     DYNAMIC_ADDRESS = 0x01
@@ -127,6 +129,7 @@ class SR920FixedAddressControlMode(enum.Enum):
 
 
 class SR920TxPower(enum.Enum):
+    # pylint: disable=invalid-name
     """Represents a transmission power in the TX_POWER configuration."""
 
     TX_1mW = 0x01
@@ -159,4 +162,3 @@ class SR920OperationMode(enum.Enum):
     BALANCE = 0x02
     LOW_LATENCY = 0x03
     NON_SLEEP = 0x04
-    CUSTOM = 0xFF
