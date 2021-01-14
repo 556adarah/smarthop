@@ -214,6 +214,9 @@ class SR920Command:
         )
 
         for template in templates:
+            if not data:
+                break
+
             temp_type = template["type"]
 
             if temp_type.startswith("select:"):
@@ -320,7 +323,10 @@ class SR920Command:
     def __str__(self):
         # _logger.debug("enter __str__()")
 
-        return "SR920Command: command_id=%s, parameters=%s" % (
-            self.command_id,
-            self.parameters,
-        )
+        if self.parameters:
+            return "SR920Command: command_id=%s, parameters=%s" % (
+                self.command_id,
+                self.parameters,
+            )
+
+        return "SR920Command: command_id=%s" % self.command_id
