@@ -397,7 +397,7 @@
                   "type": "ref:network_address"
                 },
                 {
-                  "name": "coordinator_address",
+                  "name": "coordinator",
                   "description": "親機のショートアドレス",
                   "type": "hex",
                   "length": 2,
@@ -888,7 +888,7 @@
           "type": "ref:network_address"
         },
         {
-          "name": "coordinator_address",
+          "name": "coordinator",
           "description": "親機のショートアドレス",
           "type": "hex",
           "length": 2,
