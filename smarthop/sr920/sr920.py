@@ -38,6 +38,7 @@ class SR920(contextlib.AbstractContextManager):
 
         self._notification_handler = None
 
+        self._mac_address = None
         self._version = None
 
         if port:
@@ -53,6 +54,20 @@ class SR920(contextlib.AbstractContextManager):
         )
 
         self.close()
+
+    @property
+    def mac_address(self):
+        """Gets a MAC address of the module."""
+
+        if not self._mac_address:
+            mac_address = self.read_config(sr920.SR920ConfigId.MAC_ADDRESS)
+
+            if mac_address:
+                self._mac_address = ":".join(
+                    [mac_address[i : i + 2] for i in range(0, len(mac_address), 2)]
+                )
+
+        return self._mac_address
 
     @property
     def short_address(self):

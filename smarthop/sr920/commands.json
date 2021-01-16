@@ -816,6 +816,271 @@
       ]
     },
     {
+      "name": "UPDATE_FIRMWARE_REQUEST",
+      "description": "ファーム更新要求",
+      "parameters": [
+        {
+          "name": "command_type",
+          "description": "CommandType",
+          "type": "hex",
+          "length": 1,
+          "value": "01"
+        },
+        {
+          "name": "sub_command_id",
+          "description": "SubCommandID",
+          "type": "enum:SR920FirmwareUpdateCommandId",
+          "length": 1
+        },
+        {
+          "name": "seq_no",
+          "description": "シーケンス番号",
+          "type": "int",
+          "length": 2
+        },
+        {
+          "type": "select:sub_command_id",
+          "cases": [
+            {
+              "case": ["START"],
+              "parameters": [
+                {
+                  "name": "length",
+                  "description": "データ長",
+                  "type": "int",
+                  "length": 2,
+                  "value": 21
+                },
+                {
+                  "name": "source",
+                  "description": "送信元ID",
+                  "type": "hex",
+                  "length": 2,
+                  "value": "0000"
+                },
+                {
+                  "name": "pattern_id",
+                  "description": "データ分割パターン指定番号",
+                  "type": "hex",
+                  "length": 1,
+                  "value": "05"
+                },
+                {
+                  "name": "version",
+                  "description": "バージョン情報",
+                  "type": "str",
+                  "length": 12
+                },
+                {
+                  "name": "size",
+                  "description": "ファームウェアサイズ",
+                  "type": "int",
+                  "length": 4
+                },
+                {
+                  "name": "checksum",
+                  "description": "チェックサム",
+                  "type": "bytes",
+                  "length": 2
+                }
+              ]
+            },
+            {
+              "case": ["WRITE"],
+              "parameters": [
+                {
+                  "name": "length",
+                  "description": "データ長",
+                  "type": "int",
+                  "length": 2,
+                  "value": 1028
+                },
+                {
+                  "name": "source",
+                  "description": "送信元ID",
+                  "type": "hex",
+                  "length": 2,
+                  "value": "0000"
+                },
+                {
+                  "name": "page_no",
+                  "description": "ページ番号",
+                  "type": "int",
+                  "length": 1
+                },
+                {
+                  "name": "frame_no",
+                  "description": "フレーム番号",
+                  "type": "int",
+                  "length": 1
+                },
+                {
+                  "name": "frame",
+                  "description": "ファームウェアデータフレーム",
+                  "type": "bytes",
+                  "length": 1024
+                }
+              ]
+            },
+            {
+              "case": ["CHECK"],
+              "parameters": [
+                {
+                  "name": "length",
+                  "description": "データ長",
+                  "type": "int",
+                  "length": 2,
+                  "value": 3
+                },
+                {
+                  "name": "source",
+                  "description": "送信元ID",
+                  "type": "hex",
+                  "length": 2,
+                  "value": "0000"
+                },
+                {
+                  "name": "last_page",
+                  "description": "最終ページ番号",
+                  "type": "int",
+                  "length": 1
+                }
+              ]
+            },
+            {
+              "case": ["RESET"],
+              "parameters": [
+                {
+                  "name": "length",
+                  "description": "データ長",
+                  "type": "int",
+                  "length": 2,
+                  "value": 2
+                },
+                {
+                  "name": "wait",
+                  "description": "再起動までの時間",
+                  "type": "int",
+                  "length": 2
+                }
+              ]
+            },
+            {
+              "case": ["GET_VERSION"],
+              "parameters": [
+                {
+                  "name": "length",
+                  "description": "データ長",
+                  "type": "int",
+                  "length": 2,
+                  "value": 0
+                }
+              ]
+            },
+            {
+              "default": [
+                {
+                  "name": "length",
+                  "description": "データ長",
+                  "type": "int",
+                  "length": 2
+                },
+                {
+                  "name": "data",
+                  "description": "要求データ部",
+                  "type": "bytes"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UPDATE_FIRMWARE_RESPONSE",
+      "description": "ファーム更新応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "command_type",
+          "description": "CommandType",
+          "type": "hex",
+          "length": 1,
+          "value": "01"
+        },
+        {
+          "name": "sub_command_id",
+          "description": "SubCommandID",
+          "type": "enum:SR920FirmwareUpdateCommandId",
+          "length": 1
+        },
+        {
+          "name": "seq_no",
+          "description": "シーケンス番号",
+          "type": "int",
+          "length": 2
+        },
+        {
+          "name": "length",
+          "description": "データ長",
+          "type": "int",
+          "length": 2
+        },
+        {
+          "name": "status",
+          "description": "応答結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "type": "select:sub_command_id",
+          "cases": [
+            {
+              "case": ["START", "WRITE", "CHECK"],
+              "parameters": [
+                {
+                  "name": "source",
+                  "description": "送信元ID",
+                  "type": "hex",
+                  "length": 2,
+                  "value": "0000"
+                }
+              ]
+            },
+            {
+              "case": ["RESET"],
+              "parameters": []
+            },
+            {
+              "case": ["GET_VERSION"],
+              "parameters": [
+                {
+                  "name": "version",
+                  "description": "バージョン情報",
+                  "type": "str",
+                  "length": 12
+                }
+              ]
+            },
+            {
+              "default": [
+                {
+                  "name": "data",
+                  "description": "応答データ部",
+                  "type": "bytes"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "GET_MY_NEIGHBOR_INFO_REQUEST",
       "description": "隣接ノード情報取得要求"
     },

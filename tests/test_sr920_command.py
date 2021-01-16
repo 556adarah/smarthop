@@ -9,6 +9,7 @@ class TestSR920Command(unittest.TestCase):
     """Represents test cases for the smarthop.sr920.SR920Command class."""
 
     def setUp(self):
+        # pylint: disable=line-too-long
         self.commands = [
             {
                 "command": sr920.SR920Command(
@@ -515,6 +516,130 @@ class TestSR920Command(unittest.TestCase):
                     },
                 ),
                 "bytes": b"\x03\x41\x00\x10\x00\x67\x45\x00\x00\x00\x00\x00\x00",
+            },
+            {   # START
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
+                    {
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.START,
+                        "seq_no": 1,
+                        "version": "SRMP02020005",
+                        "size": 151754,
+                        "checksum": b"\xd6\xcc"
+                    },
+                ),
+                "bytes": b"\x07\x40\x01\x02\x00\x01\x00\x15\x00\x00\x05\x53\x52\x4d\x50\x30\x32\x30\x32\x30\x30\x30\x35\x00\x02\x50\xca\xd6\xcc",
+            },
+            {
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_RESPONSE,
+                    {
+                        "result": 0,
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.START,
+                        "seq_no": 1,
+                        "length": 3,
+                        "status": 0,
+                    },
+                ),
+                "bytes": b"\x07\x41\x00\x02\x02\x00\x01\x00\x03\x00\x00\x00",
+            },
+            {   # WRITE
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
+                    {
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.WRITE,
+                        "seq_no": 1,
+                        "page_no": 1,
+                        "frame_no": 1,
+                        "frame": b"\xff" * 1024
+                    },
+                ),
+                "bytes": b"\x07\x40\x01\x03\x00\x01\x04\x04\x00\x00\x01\x01" + b"\xff" * 1024,
+            },
+            {
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_RESPONSE,
+                    {
+                        "result": 0,
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.WRITE,
+                        "seq_no": 1,
+                        "length": 3,
+                        "status": 0,
+                    },
+                ),
+                "bytes": b"\x07\x41\x00\x02\x03\x00\x01\x00\x03\x00\x00\x00",
+            },
+            {   # CHECK
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
+                    {
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.CHECK,
+                        "seq_no": 1,
+                        "last_page": 1,
+                    },
+                ),
+                "bytes": b"\x07\x40\x01\x04\x00\x01\x00\x03\x00\x00\x01",
+            },
+            {
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_RESPONSE,
+                    {
+                        "result": 0,
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.CHECK,
+                        "seq_no": 1,
+                        "length": 3,
+                        "status": 0,
+                    },
+                ),
+                "bytes": b"\x07\x41\x00\x02\x04\x00\x01\x00\x03\x00\x00\x00",
+            },
+            {   # RESET
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
+                    {
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.RESET,
+                        "seq_no": 1,
+                        "wait": 1,
+                    },
+                ),
+                "bytes": b"\x07\x40\x01\x05\x00\x01\x00\x02\x00\x01",
+            },
+            {
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_RESPONSE,
+                    {
+                        "result": 0,
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.RESET,
+                        "seq_no": 1,
+                        "length": 1,
+                        "status": 0,
+                    },
+                ),
+                "bytes": b"\x07\x41\x00\x02\x05\x00\x01\x00\x01\x00",
+            },
+            {   # GET_VERSION
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
+                    {
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.GET_VERSION,
+                        "seq_no": 1,
+                    },
+                ),
+                "bytes": b"\x07\x40\x01\x06\x00\x01\x00\x00",
+            },
+            {
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.UPDATE_FIRMWARE_RESPONSE,
+                    {
+                        "result": 0,
+                        "sub_command_id": sr920.SR920FirmwareUpdateCommandId.GET_VERSION,
+                        "seq_no": 1,
+                        "length": 13,
+                        "status": 0,
+                        "version": "SRMP02020005",
+                    },
+                ),
+                "bytes": b"\x07\x41\x00\x02\x06\x00\x01\x00\x0d\x00\x53\x52\x4d\x50\x30\x32\x30\x32\x30\x30\x30\x35",
             },
             {
                 "command": sr920.SR920Command(

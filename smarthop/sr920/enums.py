@@ -46,8 +46,8 @@ class SR920CommandId(enum.Enum):
     CONTROL_FIXED_ADDRESS_RESPONSE = 0x0341
     MEASURE_RADIO_STATUS_REQUEST = 0x0342
     MEASURE_RADIO_STATUS_RESPONSE = 0x0343
-    UPDATE_FIRMWARE_REQUEST = 0x0742
-    UPDATE_FIRMWARE_RESPONSE = 0x0743
+    UPDATE_FIRMWARE_REQUEST = 0x0740
+    UPDATE_FIRMWARE_RESPONSE = 0x0741
     GET_MY_NEIGHBOR_INFO_REQUEST = 0x0744
     GET_MY_NEIGHBOR_INFO_RESPONSE = 0x0745
     GET_NETWORK_ADDRESS_REQUEST = 0x07F6
@@ -126,6 +126,17 @@ class SR920FixedAddressControlMode(enum.Enum):
     REMOVE = 0x02
     SAVE = 0x03
     IMPORT = 0x04
+
+
+class SR920FirmwareUpdateCommandId(enum.Enum):
+    """Represents an indentifier of the sub command used in the
+    UPDATE_FIRMWARE_REQUEST/RESPONSE command."""
+
+    START = 0x02
+    WRITE = 0x03
+    CHECK = 0x04
+    RESET = 0x05
+    GET_VERSION = 0x06
 
 
 class SR920TxPower(enum.Enum):
