@@ -214,9 +214,6 @@ class SR920Command:
         )
 
         for template in templates:
-            if not data:
-                break
-
             temp_type = template["type"]
 
             if temp_type.startswith("select:"):
@@ -266,6 +263,9 @@ class SR920Command:
             else:
                 param_bytes = data
                 data = None
+
+            if not param_bytes and temp_type not in ["array", "object"]:
+                break
 
             if "value" in template:
                 continue

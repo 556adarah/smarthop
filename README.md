@@ -19,7 +19,7 @@ $ pip install git+https://github.com/556adarah/smarthop
 ## Quick Start
 
 ```python
->>> # import sr920 package
+>>> # import smarthop.sr920 package
 >>> from smarthop import sr920
 
 >>> # create an instance with the specified serial port
@@ -50,3 +50,6 @@ True
 True
 True
 ```
+
+Please see [references](https://github.com/556adarah/smarthop/wiki/References) for details.
+Note that references are provided only in Japanese.

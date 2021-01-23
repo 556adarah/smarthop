@@ -10,6 +10,8 @@ import time
 
 import jsonschema
 import serial
+import tqdm
+
 from serial import threaded
 
 from smarthop import sr920
@@ -25,6 +27,29 @@ class SR920(contextlib.AbstractContextManager):
         port: Device name or None.
             The serial port is opened on object creation if port is
             specified, otherwise to call open() are required.
+
+    Examples:
+        >>> # import smarthop.sr920 package
+        >>> from smarthop import sr920
+
+        >>> # create an instance with the specified serial port
+        >>> sr=sr920.SR920("/dev/ttyS4")
+        >>> sr.version
+        'SRMP.02.02.0005'
+        >>> sr.close()
+
+        >>> # create an instance without any serial port
+        >>> sr=sr920.SR920()
+        >>> sr.open("/dev/ttyS4")
+        >>> sr.version
+        'SRMP.02.02.0005'
+        >>> sr.close()
+
+        >>> # or you can use the 'with' statement
+        >>> with sr920.SR920("/dev/ttyS4") as sr:
+        ...     sr.version
+        ...
+        'SRMP.02.02.0005'
     """
 
     def __init__(self, port=None):
@@ -128,6 +153,38 @@ class SR920(contextlib.AbstractContextManager):
             handler: A handler for the notification event.
                 A handler should be defined as follows:
                     def notification_handler(SR920Command)
+
+        Examples:
+            >>> from smarthop import sr920
+
+            >>> # define the event handler
+            >>> def on_notified(command):
+            ...     print(command)
+            ...
+
+            >>> sr=sr920.SR920("/dev/ttyS4")
+
+            >>> # add the event handler
+            >>> sr.set_notification_handler(on_notified)
+
+            >>> # receive NETWORK_STATE_CHANGED_NOTIFICATION: ADDRESS_CHANGED
+            >>> sr.start()
+            SR920Command: command_id=SR920CommandId.NETWORK_STATE_CHANGED_NOTIFICATION,
+            parameters={'state': <SR920NetworkState.ADDRESS_CHANGED: 0>,
+            'short_address': '0001', 'pan_id': '0123', 'coordinator_address': 'ffff'}
+            True
+
+            >>> # receive NETWORK_STATE_CHANGED_NOTIFICATION: NODE_CONNECTED
+            SR920Command: command_id=SR920CommandId.NETWORK_STATE_CHANGED_NOTIFICATION,
+            parameters={'state': <SR920NetworkState.NODE_CONNECTED: 3>,
+            'short_address': '0010', 'mac_address': '0000000000004567'}
+
+            >>> # receive DATA_RECEIVED_NOTIFICATION
+            SR920Command: command_id=SR920CommandId.DATA_RECEIVED_NOTIFICATION,
+            parameters={'destination': '0001', 'source': '0010', 'nor': 3,
+            'security': True, 'ttl': 30, 'data': bytearray(b'Hello, world!')}
+
+            >>> sr.close()
         """
         _logger.debug("enter set_notification_handler(): handler=%s", handler)
 
@@ -171,6 +228,20 @@ class SR920(contextlib.AbstractContextManager):
                 if response.command_id == response_id:
                     _logger.debug("response_id matched: %s", response_id)
 
+                    if "seq_no" in response.parameters:
+                        req_seq_no = request.parameters["seq_no"]
+                        res_seq_no = response.parameters["seq_no"]
+
+                        if req_seq_no == res_seq_no:
+                            _logger.debug("seq_no matched: %s", res_seq_no)
+                        else:
+                            _logger.debug(
+                                "seq_no not matched: request=%s, response=%s",
+                                req_seq_no,
+                                res_seq_no,
+                            )
+                            continue
+
                     self._received_commands.remove(response)
 
                     return response
@@ -195,6 +266,15 @@ class SR920(contextlib.AbstractContextManager):
         Returns:
             An object representing a configuration value.
             Or returns None if configuration is not defined or command is failed.
+
+        Examples:
+            >>> # read a MAC address
+            >>> sr.read_config(sr920.SR920ConfigId.MAC_ADDRESS)
+            '0000000000000123'
+
+            >>> # read a node type from flash
+            >>> sr.read_config(sr920.SR920ConfigId.NODE_TYPE, read_from="flash")
+            <SR920NodeType.COORDINATOR: 0>
         """
         _logger.debug(
             "enter read_config(): config_id=%s, read_from=%s",
@@ -227,6 +307,22 @@ class SR920(contextlib.AbstractContextManager):
 
         Returns:
             True if succeeded to write a configuration, otherwise False.
+
+        Examples:
+            >>> # configure the node type as SLEEP_ROUTER
+            >>> sr.write_config(sr920.SR920ConfigId.NODE_TYPE,
+            sr920.SR920NodeType.SLEEP_ROUTER)
+            True
+
+            >>> # enable auto start on Flash configuration
+            >>> sr.write_config(sr920.SR920ConfigId.AUTO_START, True, write_to="flash")
+            True
+            >>> # require to save configurations when use Flash
+            >>> sr.save_config()
+            True
+            >>> # reboot to reflect configurations
+            >>> sr.reset()
+            True
         """
         _logger.debug(
             "enter write_config(): config_id=%s, value=%s, write_to=%s",
@@ -278,6 +374,20 @@ class SR920(contextlib.AbstractContextManager):
 
         Returns:
             True if succeeded to load configurations, otherwise False.
+
+        Examples:
+            >>> load configurations
+            >>> sr.load_config("sr920_config.json")
+            True
+
+            >>> load configurations to Flash
+            >>> sr.load_config("sr920_config.json", write_to="flash")
+            True
+            >>> # require to save and reboot when use Flash
+            >>> sr.save_config()
+            True
+            >>> sr.reset()
+            True
         """
         _logger.debug(
             "enter load_config(): config_file=%s, write_to=%s", config_file, write_to
@@ -402,6 +512,15 @@ class SR920(contextlib.AbstractContextManager):
         Returns:
             True if succeeded to send data, otherwise False.
             Note that the arrival of data at the destination is not guaranteed.
+
+        Examples:
+            >>> # coordinator -> router 0010
+            >>> sr.send_data(b"Hello, world!", destination="0010")
+            True
+
+            >>> # router -> coordination
+            >>> sr.send_data(b"Hello, world!")
+            True
         """
         _logger.debug(
             "enter send_data(): data=%s, destination=%s, nor=%s, security=%s, ttl=%s",
@@ -468,6 +587,18 @@ class SR920(contextlib.AbstractContextManager):
         Returns:
             A time in seconds since the epoch as float.
             Or returns None if failed.
+
+        Examples:
+            >>> # get time
+            >>> tm = sr.get_time()
+            >>> print(tm)
+            1609459200.3423157
+
+            >>> # convert to a datetime object
+            >>> import datetime
+            >>> dt = datetime.datetime.fromtimestamp(tm)
+            >>> print(dt)
+            2021-01-01 09:00:00.342316
         """
         _logger.debug("enter get_time()")
 
@@ -496,6 +627,18 @@ class SR920(contextlib.AbstractContextManager):
 
         Returns:
             True if succeeded to set time, otherwise False.
+
+        Examples:
+            >>> # use current time
+            >>> sr.set_time()
+            True
+
+            >>> import datetime
+            >>> # 2021/01/01 09:00:00
+            >>> dt = datetime.datetime(2021, 1, 1, 9, 0, 0)
+            >>> # set the specified time
+            >>> sr.set_time(dt.timestamp())
+            True
         """
         _logger.debug("enter set_time(): time_to_set=%s", time_to_set)
 
@@ -527,6 +670,22 @@ class SR920(contextlib.AbstractContextManager):
         Returns:
             A list object containing the node information.
             Or returns None if failed to get.
+
+        Examples:
+            >>> # 2 routers connected
+            >>> sr.get_node_list(sr920.SR920NodeListType.CONNECTED)
+            [{'short_address': '0010', 'mac_address': '0000000000004567'},
+            {'short_address': 'abcd', 'mac_address': '00000000000089ab'}]
+
+            >>> # 2 routers (including 1 router not connected) listed in fixed address
+            >>> # list
+            >>> sr.get_node_list(sr920.SR920NodeListType.FIXED_ADDRESS)
+            [{'short_address': '0010', 'mac_address': '0000000000004567'},
+            {'short_address': '0011', 'mac_address': '000000000000cdef'}]
+
+            >>> # 1 router listed in dynamic address list
+            >>> sr.get_node_list(sr920.SR920NodeListType.DYNAMIC_ADDRESS)
+            [{'short_address': 'abcd', 'mac_address': '00000000000089ab'}]
         """
         _logger.debug(
             "enter get_node_list(): list_type=%s, seq_no=%s", list_type, seq_no
@@ -561,6 +720,15 @@ class SR920(contextlib.AbstractContextManager):
             A list object containing the link information that consists of short
             address pair for the child/parent nodes.
             Or returns None if failed to get.
+
+        Examples:
+            >>> # In case the network topology is as follows:
+            >>> #     0001 --+-- abcd --+-- 0010
+            >>> #            |
+            >>> #            +-- 0011
+            >>> sr.get_link_list()
+            [{'child': '0010', 'parent': 'abcd'}, {'child': '0011', 'parent': '0001'},
+            {'child': 'abcd', 'parent': '0001'}]
         """
         _logger.debug("enter get_link_list(): seq_no=%s", seq_no)
 
@@ -593,6 +761,18 @@ class SR920(contextlib.AbstractContextManager):
             A list object representing the route information that consists of short
             addresses from the target node to the coordinator.
             Or returns None if failed to get.
+
+        Examples:
+            >>> # In case the network topology is as follows:
+            >>> #     0001 --+-- abcd --+-- 0010
+            >>> #            |
+            >>> #            +-- 0011
+            >>> sr.get_route("0010")
+            ['0010', 'abcd', '0001']
+            >>> sr.get_route("0011")
+            ['0011', '0001']
+            >>> sr.get_route("abcd")
+            ['abcd', '0001']
         """
         _logger.debug("enter check_route(): target=%s", target)
 
@@ -618,6 +798,11 @@ class SR920(contextlib.AbstractContextManager):
         Returns:
             An object containing RTT, hop count and voltage.
             Or returns None if failed to measure.
+
+        Examples:
+            >>> # RTT: 0.125sec, hop count: 1, voltage: 3.21V
+            >>> sr.measure_rtt("0011")
+            {'rtt': 0.125, 'hop': 1, 'voltage': 3.21}
         """
         _logger.debug("enter measure_rtt(): target=%s, length=%s", target, legnth)
 
@@ -650,6 +835,18 @@ class SR920(contextlib.AbstractContextManager):
         Returns:
             A list object containing the neighbor information.
             Or returns None if failed to get.
+
+        Examples:
+            >>> # coordinator
+            >>> sr.get_neighbor_info("0011")
+            [{'short_address': '0001', 'rssi': -21, 'link_cost': 1,
+            'hello': bytearray(b'\xff')}, {'short_address': 'abcd', 'rssi': -42,
+            'link_cost': 1, 'hello': bytearray(b'\xff')}]
+
+            >>> # router
+            >>> sr.get_neighbor_info()
+            [{'short_address': '0001', 'rssi': -21, 'hop': 0, 'parent': 'ffff'},
+            {'short_address': 'abcd', 'rssi': -42, 'hop': 2, 'parent': '0001'}]
         """
         _logger.debug("enter get_neighbor_info(): target=%s", target)
 
@@ -681,6 +878,25 @@ class SR920(contextlib.AbstractContextManager):
 
         Returns:
             True if succeeded to control, otherwise False.
+
+        Examples:
+            >>> # add
+            >>> sr.control_fixed_address(sr920.SR920FixedAddressControlMode.ADD,
+            short_address="0011", mac_address="000000000000cdef")
+            True
+
+            >>> # remove
+            >>> sr.control_fixed_address(sr920.SR920FixedAddressControlMode.REMOVE,
+            mac_address="000000000000cdef")
+            True
+
+            >>> # save
+            >>> sr.control_fixed_address(sr920.SR920FixedAddressControlMode.SAVE)
+            True
+
+            >>> # import from dynamic address list
+            >>> sr.control_fixed_address(sr920.SR920FixedAddressControlMode.IMPORT)
+            True
         """
         _logger.debug(
             "enter control_fixed_address(): mode=%s, short_address=%s, mac_address=%s",
@@ -699,7 +915,7 @@ class SR920(contextlib.AbstractContextManager):
         return self._simple_response(sr920.SR920Command(request_id, parameters))
 
     def add_fixed_address(self, short_address, mac_address):
-        """Adds the specified address to the fixed address list.
+        """Provides a shortcut of the control_fixed_address method which mode is ADD.
 
         Args:
             short_address: A hexadecimal string representing a short address.
@@ -707,6 +923,13 @@ class SR920(contextlib.AbstractContextManager):
 
         Returns:
             True if succeeded to add, otherwise False.
+
+        Examples:
+            >>> sr.add_fixed_address("0011", "000000000000cdef")
+            True
+            >>> # require to save
+            >>> sr.save_fixed_address()
+            True
         """
         _logger.debug(
             "enter add_fixed_address(): short_address=%s, mac_address=%s",
@@ -715,26 +938,36 @@ class SR920(contextlib.AbstractContextManager):
         )
 
         return self.control_fixed_address(
-            sr920.SR920FixedAddressControlMode.ADD, short_address, mac_address
+            sr920.SR920FixedAddressControlMode.ADD,
+            short_address=short_address,
+            mac_address=mac_address,
         )
 
-    def remove_fixed_address(self, short_address):
-        """Removes the specified address from the fixed address list.
+    def remove_fixed_address(self, mac_address):
+        """Provides a shortcut of the control_fixed_address method which mode is REMOVE.
 
         Args:
-            short_address: A hexadecimal string representing a short address.
+            mac_address: A hexadecimal string representing a MAC address.
 
         Returns:
             True if succeeded to remove, otherwise False.
+
+        Examples:
+            >>> sr.remove_fixed_address("000000000000cdef")
+            True
+            >>> # require to save
+            >>> sr.save_fixed_address()
+            True
         """
-        _logger.debug("enter remove_fixed_address(): short_address=%s", short_address)
+        _logger.debug("enter remove_fixed_address(): mac_address=%s", mac_address)
 
         return self.control_fixed_address(
-            sr920.SR920FixedAddressControlMode.REMOVE, short_address
+            sr920.SR920FixedAddressControlMode.REMOVE,
+            mac_address=mac_address,
         )
 
     def save_fixed_address(self):
-        """Saves the fixed address list.
+        """Provides a shortcut of the control_fixed_address method which mode is SAVE.
 
         Returns:
             True if succeeded to save, otherwise False.
@@ -744,7 +977,7 @@ class SR920(contextlib.AbstractContextManager):
         return self.control_fixed_address(sr920.SR920FixedAddressControlMode.SAVE)
 
     def import_fixed_address(self):
-        """Imports and saves the fixed address list from the dynamic address list.
+        """Provides a shortcut of the control_fixed_address method which mode is IMPORT.
 
         Returns:
             True if succeeded to import, otherwise False.
@@ -758,6 +991,13 @@ class SR920(contextlib.AbstractContextManager):
 
         Returns:
             True if succeeded to reset, otherwise False.
+
+        Examples:
+            >>> sr.reset_fixed_address()
+            True
+            >>> # require to save
+            >>> sr.save_fixed_address()
+            True
         """
         _logger.debug("enter reset_fixed_address()")
 
@@ -767,7 +1007,177 @@ class SR920(contextlib.AbstractContextManager):
             return False
 
         for node in node_list:
-            self.remove_fixed_address(node["short_address"])
+            self.remove_fixed_address(node["mac_address"])
+
+        return True
+
+    def update(self, firmware_file, force=False):
+        """Updates firmware of the module.
+
+        Args:
+            firmware_file: A path to the firmware file.
+            force: Fails update when current version is newer than specified firmware,
+                if False. Otherwise force update when newer.
+
+        Returns:
+            True if succeeded to update, otherwise False.
+
+        Examples:
+            >>> sr.update("SRMP_rev02020005.dat")
+            writing: 100%|████████████████████████| 149/149 [00:38<00:00,  3.86frames/s]
+            True
+        """
+        _logger.debug("enter update(): firmware_file=%s", firmware_file)
+
+        command_id = sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST
+        seq_no = -1
+
+        def next_seq_no():
+            nonlocal seq_no
+
+            seq_no = (seq_no + 1) % 65536
+
+            return seq_no
+
+        def get_version():
+            parameters = {
+                "sub_command_id": sr920.SR920FirmwareUpdateCommandId.GET_VERSION,
+                "seq_no": next_seq_no(),
+            }
+
+            response = self.get_response(
+                sr920.SR920Command(command_id, parameters),
+                timeout=2,  # work around: first response too late
+            )
+
+            if not response or response.parameters["status"] != 0:
+                return None
+
+            return response.parameters["version"]
+
+        # read firmware
+        with open(firmware_file, mode="rb") as fin:
+            firmware_bin = fin.read()
+
+        if len(firmware_bin) < 16:
+            _logger.error("firmware size too short")
+
+            return False
+
+        data = firmware_bin[:-16]
+        checksum = firmware_bin[-16:-14]
+        version = firmware_bin[-12:].decode("ascii")
+
+        _logger.debug("checksum=%s, version=%s", checksum, version)
+
+        if not force:
+            # get version
+            version_current = get_version()
+
+            if not version_current:
+                _logger.error("failed to get current version")
+
+                return False
+
+            # check version
+            if version <= version_current:
+                _logger.error(
+                    "firmware is older than or equals to current version: "
+                    "firmware=%s, current=%s",
+                    version,
+                    version_current,
+                )
+
+                return False
+
+        # start update
+        parameters = {
+            "sub_command_id": sr920.SR920FirmwareUpdateCommandId.START,
+            "seq_no": next_seq_no(),
+            "version": version,
+            "size": len(data),
+            "checksum": checksum,
+        }
+
+        response = self.get_response(
+            sr920.SR920Command(command_id, parameters),
+            timeout=2,  # work around: first response too late
+        )
+
+        if not response or response.parameters["status"] != 0:
+            _logger.error("failed to start firmware update")
+
+            return False
+
+        # write firmware
+        page_no = 0
+
+        for i in tqdm.trange(0, len(data), 1024, desc="writing", unit="frames"):
+            frame_total = i // 1024
+
+            page_no = frame_total // 64
+            frame_no = frame_total % 64
+
+            frame = bytearray(data[i : i + 1024])
+
+            if len(frame) < 1024:
+                frame.extend(b"\xff" * (1024 - len(frame)))
+
+            parameters = {
+                "sub_command_id": sr920.SR920FirmwareUpdateCommandId.WRITE,
+                "seq_no": next_seq_no(),
+                "page_no": page_no,
+                "frame_no": frame_no,
+                "frame": frame,
+            }
+
+            response = self.get_response(sr920.SR920Command(command_id, parameters))
+
+            if not response or response.parameters["status"] != 0:
+                _logger.error("failed to write firmware")
+
+                return False
+
+        # check result
+        parameters = {
+            "sub_command_id": sr920.SR920FirmwareUpdateCommandId.CHECK,
+            "seq_no": next_seq_no(),
+            "last_page": page_no,
+        }
+
+        response = self.get_response(sr920.SR920Command(command_id, parameters))
+
+        if not response or response.parameters["status"] != 0:
+            _logger.error("failed to check result of update")
+
+            return False
+
+        # reset
+        parameters = {
+            "sub_command_id": sr920.SR920FirmwareUpdateCommandId.RESET,
+            "seq_no": next_seq_no(),
+            "wait": 1,
+        }
+
+        response = self.get_response(sr920.SR920Command(command_id, parameters))
+
+        if not response or response.parameters["status"] != 0:
+            _logger.error("failed to reset")
+
+            return False
+
+        # wait boot up
+        time.sleep(5)
+
+        # confirm version
+        version_updated = get_version()
+
+        if not version_updated or version != version_updated:
+            _logger.error("failed to update")
+
+            return False
+
+        _logger.info("firmware updated: %s", version_updated)
 
         return True
 
@@ -778,6 +1188,10 @@ class SR920(contextlib.AbstractContextManager):
             A dict object containing short address, PAN ID and coordinator's short
             address.
             Or returns None if failed to get.
+
+        Examples:
+            >>> sr.get_network_address()
+            {'short_address': '0001', 'pan_id': '0123', 'coordinator_address': 'ffff'}
         """
         _logger.debug("enter get_network_address()")
 
