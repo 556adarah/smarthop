@@ -698,6 +698,79 @@ class SR920(contextlib.AbstractContextManager):
 
         return self._simple_response(sr920.SR920Command(request_id, parameters))
 
+    def add_fixed_address(self, short_address, mac_address):
+        """Adds the specified address to the fixed address list.
+
+        Args:
+            short_address: A hexadecimal string representing a short address.
+            mac_address: A hexadecimal string representing a MAC address.
+
+        Returns:
+            True if succeeded to add, otherwise False.
+        """
+        _logger.debug(
+            "enter add_fixed_address(): short_address=%s, mac_address=%s",
+            short_address,
+            mac_address,
+        )
+
+        return self.control_fixed_address(
+            sr920.SR920FixedAddressControlMode.ADD, short_address, mac_address
+        )
+
+    def remove_fixed_address(self, short_address):
+        """Removes the specified address from the fixed address list.
+
+        Args:
+            short_address: A hexadecimal string representing a short address.
+
+        Returns:
+            True if succeeded to remove, otherwise False.
+        """
+        _logger.debug("enter remove_fixed_address(): short_address=%s", short_address)
+
+        return self.control_fixed_address(
+            sr920.SR920FixedAddressControlMode.REMOVE, short_address
+        )
+
+    def save_fixed_address(self):
+        """Saves the fixed address list.
+
+        Returns:
+            True if succeeded to save, otherwise False.
+        """
+        _logger.debug("enter save_fixed_address()")
+
+        return self.control_fixed_address(sr920.SR920FixedAddressControlMode.SAVE)
+
+    def import_fixed_address(self):
+        """Imports and saves the fixed address list from the dynamic address list.
+
+        Returns:
+            True if succeeded to import, otherwise False.
+        """
+        _logger.debug("enter import_fixed_address()")
+
+        return self.control_fixed_address(sr920.SR920FixedAddressControlMode.IMPORT)
+
+    def reset_fixed_address(self):
+        """Removes all addresses from the fixed address list.
+
+        Returns:
+            True if succeeded to reset, otherwise False.
+        """
+        _logger.debug("enter reset_fixed_address()")
+
+        node_list = self.get_node_list(sr920.SR920NodeListType.FIXED_ADDRESS)
+
+        if not node_list:
+            return False
+
+        for node in node_list:
+            self.remove_fixed_address(node["short_address"])
+
+        return True
+
     def get_network_address(self):
         """Gets network information related to the current network.
 
