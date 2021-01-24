@@ -214,6 +214,11 @@ class SR920(contextlib.AbstractContextManager):
         request_id = request.command_id
         response_id = sr920.SR920CommandId(request_id.value + 1)
 
+        # remove old responses
+        for command in self._received_commands:
+            if command.command_id == response_id:
+                self._received_commands.remove(command)
+
         self._protocol.send_command(request)
 
         _logger.debug("waiting for response: %s", response_id)
@@ -549,7 +554,7 @@ class SR920(contextlib.AbstractContextManager):
         }
 
         return self._simple_response(
-            sr920.SR920Command(request_id, parameters), timeout=2
+            sr920.SR920Command(request_id, parameters), timeout=10
         )
 
     def start(self, mode=None):
@@ -806,11 +811,17 @@ class SR920(contextlib.AbstractContextManager):
         """
         _logger.debug("enter measure_rtt(): target=%s, length=%s", target, legnth)
 
+        # get hop count to the target
+        hop = len(self.get_route(target)) - 1
+
+        # timeout = hop for round trip + 50% margins
+        timeout = hop * 2 * 1.5
+
         request_id = sr920.SR920CommandId.MEASURE_RTT_REQUEST
         parameters = {"target": target, "length": legnth}
 
         response = self.get_response(
-            sr920.SR920Command(request_id, parameters), timeout=2
+            sr920.SR920Command(request_id, parameters), timeout=timeout
         )
 
         if response and response.parameters["result"] == 0x00:
@@ -853,12 +864,19 @@ class SR920(contextlib.AbstractContextManager):
         if target:
             request_id = sr920.SR920CommandId.GET_NEIGHBOR_INFO_REQUEST
             parameters = {"target": target}
+
+            # get hop count to the target
+            hop = len(self.get_route(target)) - 1
+
+            # timeout = hop for round trip + 50% margins
+            timeout = hop * 2 * 1.5
         else:
             request_id = sr920.SR920CommandId.GET_MY_NEIGHBOR_INFO_REQUEST
             parameters = {}
+            timeout = 1
 
         response = self.get_response(
-            sr920.SR920Command(request_id, parameters), timeout=2
+            sr920.SR920Command(request_id, parameters), timeout=timeout
         )
 
         if response and response.parameters["result"] == 0x00:
@@ -1218,6 +1236,33 @@ class SR920(contextlib.AbstractContextManager):
 
         Returns:
             A list object containing the scan result for each channel.
+
+        Examples:
+            >>> # configure as coordinator
+            >>> sr.write_config(sr920.SR920ConfigId.NODE_TYPE,
+            ... sr920.SR920NodeType.COORDINATOR)
+            True
+            >>> # start channel scan mode
+            >>> sr.start(sr920.SR920NetworkMode.START_CHANNEL_SCAN)
+            True
+
+            >>> # scan all channels
+            >>> sr.scan_channels()
+            scanning: 100%|███████████████████████| 28/28 [00:32<00:00,  1.15s/channels]
+            [{'channel': 33, 'rssi_max': -103, 'rssi_min': -123, 'rssi_ave': -113.65},
+            {'channel': 34, 'rssi_max': -105, 'rssi_min': -123, 'rssi_ave': -113.79},
+            ... (omitted)
+            {'channel': 60, 'rssi_max': -107, 'rssi_min': -123, 'rssi_ave': -114.22}]
+
+            >>> # scan specified channels
+            >>> sr.scan_channels([33,34])
+            scanning: 100%|█████████████████████████| 2/2 [00:02<00:00,  1.14s/channels]
+            [{'channel': 33, 'rssi_max': -104, 'rssi_min': -123, 'rssi_ave': -114.03},
+            {'channel': 34, 'rssi_max': -105, 'rssi_min': -123, 'rssi_ave': -113.92}]
+
+            >>> # stop channel scan mode
+            >>> sr.start(sr920.SR920NetworkMode.STOP_CHANNEL_SCAN)
+            True
         """
         _logger.debug(
             "enter scan_channels(): channels=%s, count=%s, interval=%s",
@@ -1231,12 +1276,7 @@ class SR920(contextlib.AbstractContextManager):
         if not channels:
             channels = list(range(33, 61))
 
-        for channel in channels:
-            # remove SCAN_CHANNEL_RESPONSE commands in received buffers
-            for command in self._received_commands:
-                if command.command_id == sr920.SR920CommandId.SCAN_CHANNEL_RESPONSE:
-                    self._received_commands.remove(command)
-
+        for channel in tqdm.tqdm(channels, desc="scanning", unit="channels"):
             command_id = sr920.SR920CommandId.SCAN_CHANNEL_REQUEST
             parameters = {
                 "mode": sr920.SR920ChannelScanMode.START,
