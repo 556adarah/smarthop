@@ -1204,8 +1204,72 @@ class SR920(contextlib.AbstractContextManager):
 
         return None
 
+    def scan_channels(self, channels=None, count=500, interval=2):
+        """Scans noise level in the specified channels.
+
+        Args:
+            channels: A list object containing an int object between 33 and 60
+                representing the channel to scan.
+                Uses all channels, if not specified.
+            count: Scan count.
+                Uses 500 times, if not specified.
+            interval: Scan interval in milli-seconds.
+                Uses 2 msec, if not specified.
+
+        Returns:
+            A list object containing the scan result for each channel.
+        """
+        _logger.debug(
+            "enter scan_channels(): channels=%s, count=%s, interval=%s",
+            channels,
+            count,
+            interval,
+        )
+
+        results = []
+
+        if not channels:
+            channels = list(range(33, 61))
+
+        for channel in channels:
+            # remove SCAN_CHANNEL_RESPONSE commands in received buffers
+            for command in self._received_commands:
+                if command.command_id == sr920.SR920CommandId.SCAN_CHANNEL_RESPONSE:
+                    self._received_commands.remove(command)
+
+            command_id = sr920.SR920CommandId.SCAN_CHANNEL_REQUEST
+            parameters = {
+                "mode": sr920.SR920ChannelScanMode.START,
+                "channel": channel,
+                "count": count,
+                "interval": interval,
+            }
+
+            # timeout has 50% margins
+            timeout = count * interval * 0.001 * 1.5
+
+            response = self.get_response(
+                sr920.SR920Command(command_id, parameters), timeout=timeout
+            )
+
+            if not response or response.parameters["result"] != 0:
+                _logger.warning("failed to scan: channel=%s", channel)
+
+                continue
+
+            results.append(
+                {
+                    "channel": response.parameters["channel"],
+                    "rssi_max": response.parameters["rssi_max"],
+                    "rssi_min": response.parameters["rssi_min"],
+                    "rssi_ave": response.parameters["rssi_ave"] * 0.01,
+                }
+            )
+
+        return results
+
     def _on_command_received(self, cmd_received):
-        _logger.debug("enter on_command_received(): cmd_received=%s", cmd_received)
+        _logger.debug("enter _on_command_received(): cmd_received=%s", cmd_received)
 
         if cmd_received.command_id.name.endswith("NOTIFICATION"):
             if self._notification_handler:

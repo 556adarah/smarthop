@@ -1160,6 +1160,98 @@
           "byteorder": "little"
         }
       ]
+    },
+    {
+      "name": "SCAN_CHANNEL_REQUEST",
+      "description": "チャネルスキャン要求",
+      "parameters": [
+        {
+          "name": "mode",
+          "description": "動作",
+          "type": "enum:SR920ChannelScanMode",
+          "length": 1
+        },
+        {
+          "name": "channel",
+          "description": "CH番号",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "count",
+          "description": "測定回数",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "interval",
+          "description": "スキャン間隔",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        }
+      ]
+    },
+    {
+      "name": "SCAN_CHANNEL_RESPONSE",
+      "description": "チャネルスキャン応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "mode",
+          "description": "動作",
+          "type": "enum:SR920ChannelScanMode",
+          "length": 1
+        },
+        {
+          "name": "channel",
+          "description": "CH番号",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "count",
+          "description": "測定回数",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "interval",
+          "description": "スキャン間隔",
+          "type": "int",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "name": "rssi_max",
+          "description": "最大RSSI",
+          "type": "int",
+          "length": 1,
+          "signed": true
+        },
+        {
+          "name": "rssi_min",
+          "description": "最小RSSI",
+          "type": "int",
+          "length": 1,
+          "signed": true
+        },
+        {
+          "name": "rssi_ave",
+          "description": "平均RSSI",
+          "type": "int",
+          "length": 2,
+          "signed": true,
+          "byteorder": "little"
+        }
+      ]
     }
   ],
   "definitions": {

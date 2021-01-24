@@ -139,6 +139,14 @@ class SR920FirmwareUpdateCommandId(enum.Enum):
     GET_VERSION = 0x06
 
 
+class SR920ChannelScanMode(enum.Enum):
+    """Represents a mode to scan channel used in the
+    SCAN_CHANNEL_REQUEST/RESPONSE command."""
+
+    START = 0x00
+    STOP = 0x01
+
+
 class SR920TxPower(enum.Enum):
     # pylint: disable=invalid-name
     """Represents a transmission power in the TX_POWER configuration."""

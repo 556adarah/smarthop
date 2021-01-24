@@ -688,6 +688,34 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\xf7\x00\x01\x00\x23\x01\xff\xff",
             },
+            {
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.SCAN_CHANNEL_REQUEST,
+                    {
+                        "mode": sr920.SR920ChannelScanMode.START,
+                        "channel": 33,
+                        "count": 500,
+                        "interval": 2
+                    }
+                ),
+                "bytes": b"\x07\x09\x00\x21\xf4\x01\x02\x00"
+            },
+            {
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.SCAN_CHANNEL_RESPONSE,
+                    {
+                        "result": 0,
+                        "mode": sr920.SR920ChannelScanMode.START,
+                        "channel": 33,
+                        "count": 500,
+                        "interval": 2,
+                        "rssi_max": -84,
+                        "rssi_min": -92,
+                        "rssi_ave": -8775
+                    }
+                ),
+                "bytes": b"\x07\x0a\x00\x00\x21\xf4\x01\x02\x00\xac\xa4\xb9\xdd"
+            }
         ]
 
     def test_constructor(self):
