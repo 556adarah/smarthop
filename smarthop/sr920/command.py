@@ -324,7 +324,7 @@ class SR920Command:
         # _logger.debug("enter __str__()")
 
         if self.parameters:
-            return "SR920Command: command_id=%s, parameters=%s" % (
+            return "SR920Command: command_id=%r, parameters=%s" % (
                 self.command_id,
                 self.parameters,
             )

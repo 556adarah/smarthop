@@ -74,5 +74,27 @@
       }
     },
     "additionalProperties": true
-  }
+  },
+  "dependencies": {
+    "OPERATION_MODE": ["NODE_TYPE"],
+    "FIXED_ADDRESSES": {
+      "properties": {
+        "NODE_TYPE": {
+          "enum": ["COORDINATOR", "SLEEP_COORDINATOR"]
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "ENABLE_TIME_SYNC": { "const": true }
+        }
+      },
+      "then": {
+        "required": ["OPERATION_MODE"]
+      }
+    }
+  ]
 }

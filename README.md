@@ -15,6 +15,7 @@ $ pip install git+https://github.com/556adarah/smarthop
 - Python 3.6 or higher
 - [pyserial](https://pythonhosted.org/pyserial/) 3.0 or higher
 - [jsonschema](https://python-jsonschema.readthedocs.io/en/stable/)
+- [tqdm](https://tqdm.github.io/)
 
 ## Quick Start
 

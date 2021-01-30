@@ -303,7 +303,7 @@ class SR920(contextlib.AbstractContextManager):
 
         response = self.get_response(sr920.SR920Command(request_id, parameters))
 
-        if response and response.parameters["result"] == 0:
+        if response and response.parameters["result"] == 0x00:
             return response.parameters["value"]
 
         return None
@@ -494,13 +494,9 @@ class SR920(contextlib.AbstractContextManager):
             fixed = configs.pop("FIXED_ADDRESSES")
 
             for short_address in fixed:
-                self.control_fixed_address(
-                    sr920.SR920FixedAddressControlMode.ADD,
-                    short_address=short_address,
-                    mac_address=fixed[short_address],
-                )
+                self.add_fixed_address(short_address, fixed[short_address])
 
-            self.control_fixed_address(sr920.SR920FixedAddressControlMode.SAVE)
+            self.save_fixed_address()
 
         for config_id in configs:
             self.write_config(config_id, configs[config_id], write_to)
@@ -579,7 +575,15 @@ class SR920(contextlib.AbstractContextManager):
         request_id = sr920.SR920CommandId.START_NETWORK_REQUEST
         parameters = {"mode": mode if mode else sr920.SR920NetworkMode.START_NETWORK}
 
-        return self._simple_response(sr920.SR920Command(request_id, parameters))
+        response = self.get_response(sr920.SR920Command(request_id, parameters))
+
+        if response and response.parameters["result"] in [0x00, 0x44]:
+            if response.parameters["result"] == 0x44:
+                _logger.warning("network already started")
+
+            return True
+
+        return False
 
     def reset(self):
         """Resets the module.
@@ -1271,8 +1275,8 @@ class SR920(contextlib.AbstractContextManager):
 
         Args:
             firmware_file: A path to the firmware file.
-            force: Fails update when current version is newer than specified firmware,
-                if False. Otherwise force update when newer.
+            force: Fails update when the specified firmware is older than or equals to
+            current version, if False. Otherwise force update without version check.
 
         Returns:
             True if succeeded to update, otherwise False.
@@ -1305,7 +1309,7 @@ class SR920(contextlib.AbstractContextManager):
                 timeout=2,  # work around: first response too late
             )
 
-            if not response or response.parameters["status"] != 0:
+            if not response or response.parameters["status"] != 0x00:
                 return None
 
             return response.parameters["version"]
@@ -1359,7 +1363,7 @@ class SR920(contextlib.AbstractContextManager):
             timeout=2,  # work around: first response too late
         )
 
-        if not response or response.parameters["status"] != 0:
+        if not response or response.parameters["status"] != 0x00:
             _logger.error("failed to start firmware update")
 
             return False
@@ -1388,7 +1392,7 @@ class SR920(contextlib.AbstractContextManager):
 
             response = self.get_response(sr920.SR920Command(command_id, parameters))
 
-            if not response or response.parameters["status"] != 0:
+            if not response or response.parameters["status"] != 0x00:
                 _logger.error("failed to write firmware")
 
                 return False
@@ -1402,7 +1406,7 @@ class SR920(contextlib.AbstractContextManager):
 
         response = self.get_response(sr920.SR920Command(command_id, parameters))
 
-        if not response or response.parameters["status"] != 0:
+        if not response or response.parameters["status"] != 0x00:
             _logger.error("failed to check result of update")
 
             return False
@@ -1416,7 +1420,7 @@ class SR920(contextlib.AbstractContextManager):
 
         response = self.get_response(sr920.SR920Command(command_id, parameters))
 
-        if not response or response.parameters["status"] != 0:
+        if not response or response.parameters["status"] != 0x00:
             _logger.error("failed to reset")
 
             return False
@@ -1529,7 +1533,7 @@ class SR920(contextlib.AbstractContextManager):
                 sr920.SR920Command(command_id, parameters), timeout=timeout
             )
 
-            if not response or response.parameters["result"] != 0:
+            if not response or response.parameters["result"] != 0x00:
                 _logger.warning("failed to scan: channel=%s", channel)
 
                 continue
