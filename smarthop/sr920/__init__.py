@@ -12,6 +12,7 @@ __all__ = [
     "SR920NetworkState",
     "SR920NodeListType",
     "SR920FixedAddressControlMode",
+    "SR920RadioMeasurementMode",
     "SR920FirmwareUpdateCommandId",
     "SR920ChannelScanMode",
     "SR920TxPower",

@@ -128,6 +128,16 @@ class SR920FixedAddressControlMode(enum.Enum):
     IMPORT = 0x04
 
 
+class SR920RadioMeasurementMode(enum.Enum):
+    """Represents a mode to measure radio status used in the
+    MEASURE_RADIO_STATUS_REQUEST/RESPONSE command."""
+
+    START_SEND = 0x01
+    START_RECEIVE = 0x02
+    RESULT = 0x03
+    ABORT = 0x04
+
+
 class SR920FirmwareUpdateCommandId(enum.Enum):
     """Represents an indentifier of the sub command used in the
     UPDATE_FIRMWARE_REQUEST/RESPONSE command."""

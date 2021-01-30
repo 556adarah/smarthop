@@ -816,6 +816,131 @@
       ]
     },
     {
+      "name": "MEASURE_RADIO_STATUS_REQUEST",
+      "description": "電波測定要求",
+      "parameters": [
+        {
+          "name": "mode",
+          "description": "操作種別",
+          "type": "enum:SR920RadioMeasurementMode",
+          "length": 1
+        },
+        {
+          "name": "target",
+          "description": "送信先アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "type": "select:mode",
+          "cases": [
+            {
+              "case": ["START_SEND"],
+              "parameters": [
+                {
+                  "name": "count",
+                  "description": "送信パケット数",
+                  "type": "int",
+                  "length": 2,
+                  "byteorder": "little"
+                },
+                {
+                  "name": "interval",
+                  "description": "送信間隔",
+                  "type": "int",
+                  "length": 2,
+                  "byteorder": "little"
+                },
+                {
+                  "name": "length",
+                  "description": "データ長",
+                  "type": "int",
+                  "length": 2,
+                  "byteorder": "little"
+                }
+              ]
+            },
+            {
+              "default": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MEASURE_RADIO_STATUS_RESPONSE",
+      "description": "電波測定応答",
+      "parameters": [
+        {
+          "name": "result",
+          "description": "結果",
+          "type": "int",
+          "length": 1
+        },
+        {
+          "name": "mode",
+          "description": "操作種別",
+          "type": "enum:SR920RadioMeasurementMode",
+          "length": 1
+        },
+        {
+          "name": "target",
+          "description": "送信元アドレス",
+          "type": "hex",
+          "length": 2,
+          "byteorder": "little"
+        },
+        {
+          "type": "select:mode",
+          "cases": [
+            {
+              "case": ["RESULT"],
+              "parameters": [
+                {
+                  "name": "count",
+                  "description": "パケット数",
+                  "type": "int",
+                  "length": 2,
+                  "byteorder": "little"
+                },
+                {
+                  "name": "rssi_max",
+                  "description": "最大RSSI値",
+                  "type": "int",
+                  "length": 1,
+                  "signed": true
+                },
+                {
+                  "name": "rssi_min",
+                  "description": "最小RSSI値",
+                  "type": "int",
+                  "length": 1,
+                  "signed": true
+                },
+                {
+                  "name": "rssi_ave_int",
+                  "description": "平均RSSI値（整数部）",
+                  "type": "int",
+                  "length": 1,
+                  "signed": true
+                },
+                {
+                  "name": "rssi_ave_frac",
+                  "description": "平均RSSI値（小数部）",
+                  "type": "int",
+                  "length": 1
+                }
+              ]
+            },
+            {
+              "default": []
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "UPDATE_FIRMWARE_REQUEST",
       "description": "ファーム更新要求",
       "parameters": [

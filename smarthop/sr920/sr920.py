@@ -60,11 +60,16 @@ class SR920(contextlib.AbstractContextManager):
         self._protocol = None
 
         self._received_commands = []
+        self._received_commands_lock = threading.Lock()
 
         self._notification_handler = None
 
         self._mac_address = None
         self._version = None
+
+        self._measurement = None
+        self._measurement_completed = threading.Event()
+        self._measurement_lock = threading.Lock()
 
         if port:
             self.open(port)
@@ -214,10 +219,11 @@ class SR920(contextlib.AbstractContextManager):
         request_id = request.command_id
         response_id = sr920.SR920CommandId(request_id.value + 1)
 
-        # remove old responses
-        for command in self._received_commands:
-            if command.command_id == response_id:
-                self._received_commands.remove(command)
+        with self._received_commands_lock:
+            # remove old responses
+            for command in self._received_commands:
+                if command.command_id == response_id:
+                    self._received_commands.remove(command)
 
         self._protocol.send_command(request)
 
@@ -229,27 +235,28 @@ class SR920(contextlib.AbstractContextManager):
         timer.start()
 
         while not event_timeout.wait(0.1):
-            for response in self._received_commands:
-                if response.command_id == response_id:
-                    _logger.debug("response_id matched: %s", response_id)
+            with self._received_commands_lock:
+                for response in self._received_commands:
+                    if response.command_id == response_id:
+                        _logger.debug("response_id matched: %s", response_id)
 
-                    if "seq_no" in response.parameters:
-                        req_seq_no = request.parameters["seq_no"]
-                        res_seq_no = response.parameters["seq_no"]
+                        if "seq_no" in response.parameters:
+                            req_seq_no = request.parameters["seq_no"]
+                            res_seq_no = response.parameters["seq_no"]
 
-                        if req_seq_no == res_seq_no:
-                            _logger.debug("seq_no matched: %s", res_seq_no)
-                        else:
-                            _logger.debug(
-                                "seq_no not matched: request=%s, response=%s",
-                                req_seq_no,
-                                res_seq_no,
-                            )
-                            continue
+                            if req_seq_no == res_seq_no:
+                                _logger.debug("seq_no matched: %s", res_seq_no)
+                            else:
+                                _logger.debug(
+                                    "seq_no not matched: request=%s, response=%s",
+                                    req_seq_no,
+                                    res_seq_no,
+                                )
+                                continue
 
-                    self._received_commands.remove(response)
+                        self._received_commands.remove(response)
 
-                    return response
+                        return response
 
         if retry > 0:
             _logger.warning("request timed out. retrying...: %s", request)
@@ -791,14 +798,14 @@ class SR920(contextlib.AbstractContextManager):
 
         return None
 
-    def measure_rtt(self, target, legnth=30):
+    def measure_rtt(self, target, length=32):
         """Gets the result of RTT measurement with the specified node.
 
         Args:
             target: A hexadecimal string representing a short address of the target
                 node.
             length: A data length to send. (in bytes)
-                Uses 30 bytes length, if not specified.
+                Uses 32 bytes length, if not specified.
 
         Returns:
             An object containing RTT, hop count and voltage.
@@ -809,19 +816,14 @@ class SR920(contextlib.AbstractContextManager):
             >>> sr.measure_rtt("0011")
             {'rtt': 0.125, 'hop': 1, 'voltage': 3.21}
         """
-        _logger.debug("enter measure_rtt(): target=%s, length=%s", target, legnth)
-
-        # get hop count to the target
-        hop = len(self.get_route(target)) - 1
-
-        # timeout = hop for round trip + 50% margins
-        timeout = hop * 2 * 1.5
+        _logger.debug("enter measure_rtt(): target=%s, length=%s", target, length)
 
         request_id = sr920.SR920CommandId.MEASURE_RTT_REQUEST
-        parameters = {"target": target, "length": legnth}
+        parameters = {"target": target, "length": length}
 
         response = self.get_response(
-            sr920.SR920Command(request_id, parameters), timeout=timeout
+            sr920.SR920Command(request_id, parameters),
+            timeout=self._get_timeout(target),
         )
 
         if response and response.parameters["result"] == 0x00:
@@ -864,12 +866,7 @@ class SR920(contextlib.AbstractContextManager):
         if target:
             request_id = sr920.SR920CommandId.GET_NEIGHBOR_INFO_REQUEST
             parameters = {"target": target}
-
-            # get hop count to the target
-            hop = len(self.get_route(target)) - 1
-
-            # timeout = hop for round trip + 50% margins
-            timeout = hop * 2 * 1.5
+            timeout = self._get_timeout(target)
         else:
             request_id = sr920.SR920CommandId.GET_MY_NEIGHBOR_INFO_REQUEST
             parameters = {}
@@ -1028,6 +1025,246 @@ class SR920(contextlib.AbstractContextManager):
             self.remove_fixed_address(node["mac_address"])
 
         return True
+
+    def start_radio_measurement(
+        self, destinations=None, source="0001", count=100, interval=4000, length=32
+    ):
+        """Starts radio status measurement with the specified conditions.
+
+        Args:
+            destinations: A list object containing a hexadecimal string representing
+                a short address.
+                Uses all connected nodes excepting for source, if not specified.
+            source: A hexadecimal string representing a short address for
+                the source node.
+                Uses "0001" that means the coordinator address, if not specified.
+            count: Number of sending test packets.
+                Uses 100 times, if not specified.
+            interval: Interval to send test packets. (in milli-seconds)
+                Uses 4 seconds, if not specified.
+            length: A data length to send. (in bytes)
+                Uses 32 bytes length, if not specified.
+
+        Returns:
+            An instance of the threading.Event class representing the event when
+            the measurement is completed.
+            Or returns None if failed to start measurement.
+
+        Examples:
+            >>> # require to start network
+            >>> sr.start()
+            True
+
+            >>> # start measurement
+            >>> completed = sr.start_radio_measurement()
+
+            >>> # waiting for complete of measurement
+            >>> while not completed.wait(1):
+            ...     pass
+            ...
+
+            >>> # get all result of measurement
+            >>> sr.get_result_radio_measurement()
+            [{'destination': '0010', 'rssi_max': -53, 'rssi_min': -56,
+            'rssi_ave': -53.87, 'per': 0.0}, {'destination': '0011',
+            'rssi_max': -48, 'rssi_min': -50, 'rssi_ave': -48.53, 'per': 0.0}]
+
+            >>> # or get partial result of measurement
+            >>> sr.get_result_radio_measurement(["0010"])
+            [{'destination': '0010', 'rssi_max': -53, 'rssi_min': -56,
+            'rssi_ave': -53.87, 'per': 0.0}]
+        """
+        _logger.debug(
+            "enter start_radio_measurement(): "
+            "destinations=%s, source=%s, count=%s, interval=%s, length=%s",
+            destinations,
+            source,
+            count,
+            interval,
+            length,
+        )
+
+        if not destinations:
+            node_list = self.get_node_list(sr920.SR920NodeListType.CONNECTED)
+
+            if not node_list:
+                _logger.error("failed to get node list")
+                return None
+
+            destinations = [node["short_address"] for node in node_list]
+
+            if source in destinations:
+                destinations.remove(source)
+                destinations.append("0001")
+
+            _logger.debug("destinations: %s", destinations)
+
+        command_id = sr920.SR920CommandId.MEASURE_RADIO_STATUS_REQUEST
+
+        for destination in destinations:
+            parameters = {
+                "mode": sr920.SR920RadioMeasurementMode.START_RECEIVE,
+                "target": destination,
+            }
+
+            if not self._simple_response(
+                sr920.SR920Command(command_id, parameters),
+                timeout=self._get_timeout(destination),
+            ):
+                _logger.error("failed to start receiving: %s", destination)
+                return None
+
+        parameters = {
+            "mode": sr920.SR920RadioMeasurementMode.START_SEND,
+            "target": source,
+            "count": count,
+            "interval": interval,
+            "length": length,
+        }
+
+        if not self._simple_response(
+            sr920.SR920Command(command_id, parameters),
+            timeout=self._get_timeout(source),
+        ):
+            _logger.error("failed to start sending: %s", source)
+            return None
+
+        self._measurement_completed.clear()
+
+        self._measurement = {
+            "destinations": destinations,
+            "source": source,
+            "count": count,
+            "interval": interval,
+            "length": length,
+            "start": time.time(),
+            "worker": threading.Thread(
+                target=self._measurement_worker, name="measurement"
+            ),
+        }
+
+        self._measurement["worker"].start()
+
+        return self._measurement_completed
+
+    def get_result_radio_measurement(self, destinations=None):
+        """Get results of radio status measurement.
+
+        Args:
+            destinations: A list object containing a hexadecimal string representing
+                a short address.
+                Uses all nodes to measure, if not specified.
+
+        Returns:
+            A list object containing the measurement result for each node.
+            Or returns None if failed to get result.
+        """
+        _logger.debug(
+            "enter get_result_radio_measurement(): destinations=%s", destinations
+        )
+
+        if not self._measurement:
+            _logger.error("measurement not started or aborted")
+            return None
+
+        if not destinations:
+            destinations = self._measurement["destinations"]
+
+        if self._measurement["worker"].is_alive():
+            _logger.warning("measurement not completed. waiting for the complete")
+            self._measurement["worker"].join()
+
+        results = []
+
+        command_id = sr920.SR920CommandId.MEASURE_RADIO_STATUS_REQUEST
+
+        for destination in destinations:
+            if destination not in self._measurement["destinations"]:
+                _logger.warning("measurement not started on target: %s", destination)
+                continue
+
+            parameters = {
+                "mode": sr920.SR920RadioMeasurementMode.RESULT,
+                "target": destination,
+            }
+
+            response = self.get_response(
+                sr920.SR920Command(command_id, parameters),
+                timeout=self._get_timeout(destination),
+            )
+
+            if not response or response.parameters["result"] != 0x00:
+                _logger.warning("failed to get measurement result: %s", destination)
+                continue
+
+            rssi_ave = (
+                response.parameters["rssi_ave_int"]
+                + response.parameters["rssi_ave_frac"] * -0.01
+            )
+            count = self._measurement["count_sent"]
+            per = (count - response.parameters["count"]) / count
+
+            results.append(
+                {
+                    "destination": destination,
+                    "rssi_max": response.parameters["rssi_max"],
+                    "rssi_min": response.parameters["rssi_min"],
+                    "rssi_ave": rssi_ave,
+                    "per": per,
+                }
+            )
+
+        return results
+
+    def abort_radio_measurement(self):
+        """Aborts radio status measurement.
+
+        Returns:
+            True if succeeded to abort measurement, otherwise False.
+
+        Examples:
+            >>> # require to start network
+            >>> sr.start()
+            True
+
+            >>> # start measurement
+            >>> completed = sr.start_radio_measurement()
+
+            >>> # abort measurement
+            >>> sr.abort_radio_measurement()
+            True
+        """
+        _logger.debug("enter abort_radio_measurement()")
+
+        with self._measurement_lock:
+            if not self._measurement:
+                _logger.error("measurement not started")
+                return False
+
+            if "end" in self._measurement:
+                _logger.warning("measurement already completed")
+                return True
+
+            source = self._measurement["source"]
+
+        command_id = sr920.SR920CommandId.MEASURE_RADIO_STATUS_REQUEST
+        parameters = {
+            "mode": sr920.SR920RadioMeasurementMode.ABORT,
+            "target": source,
+        }
+
+        if self._simple_response(
+            sr920.SR920Command(command_id, parameters),
+            timeout=self._get_timeout(source),
+        ):
+            with self._measurement_lock:
+                self._measurement = None
+
+            _logger.info("measurement aborted by user")
+
+            return True
+
+        return False
 
     def update(self, firmware_file, force=False):
         """Updates firmware of the module.
@@ -1315,7 +1552,8 @@ class SR920(contextlib.AbstractContextManager):
             if self._notification_handler:
                 self._notification_handler(cmd_received)
         else:
-            self._received_commands.append(cmd_received)
+            with self._received_commands_lock:
+                self._received_commands.append(cmd_received)
 
     def _simple_response(self, request, retry=2, timeout=1):
         _logger.debug(
@@ -1331,6 +1569,65 @@ class SR920(contextlib.AbstractContextManager):
             return True
 
         return False
+
+    def _get_timeout(self, target):
+        _logger.debug("enter _get_timeout(): target=%s", target)
+
+        # get hop count to the target
+        hop = len(self.get_route(target)) - 1
+
+        # timeout = (hop for round trip + 50% margins) or 1sec if target is coordinator
+        timeout = (hop * 2 * 1.5) or 1
+
+        return timeout
+
+    def _measurement_worker(self):
+        _logger.debug("enter _measurement_worker()")
+
+        # timeout = (2 + interval) * count +50% margins
+        timeout = (
+            (2 + self._measurement["interval"] / 1000)
+            * self._measurement["count"]
+            * 1.5
+        )
+
+        event_timeout = threading.Event()
+
+        timer = threading.Timer(timeout, event_timeout.set)
+        timer.start()
+
+        while not event_timeout.wait(0.1):
+            with self._measurement_lock:
+                # measurement aborted
+                if not self._measurement:
+                    break
+
+                for command in self._received_commands:
+                    if (
+                        command.command_id
+                        == sr920.SR920CommandId.MEASURE_RADIO_STATUS_RESPONSE
+                        and command.parameters["mode"]
+                        == sr920.SR920RadioMeasurementMode.RESULT
+                    ):
+                        self._measurement["end"] = time.time()
+                        self._measurement["count_sent"] = command.parameters["count"]
+
+                        _logger.info(
+                            "measurement completed in %.2f sec",
+                            self._measurement["end"] - self._measurement["start"],
+                        )
+
+                        break
+
+                if "end" in self._measurement:
+                    break
+        else:
+            with self._measurement_lock:
+                self._measurement = None
+
+            _logger.error("measurement timed out")
+
+        self._measurement_completed.set()
 
     @staticmethod
     def _get_operation_mode_configs(mode, node_type, time_sync=False):

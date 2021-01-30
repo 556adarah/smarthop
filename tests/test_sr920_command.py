@@ -517,6 +517,56 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x03\x41\x00\x10\x00\x67\x45\x00\x00\x00\x00\x00\x00",
             },
+            {   # START_SEND
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.MEASURE_RADIO_STATUS_REQUEST,
+                    {
+                        "mode": sr920.SR920RadioMeasurementMode.START_SEND,
+                        "target": "0001",
+                        "count": 100,
+                        "interval": 4000,
+                        "length": 32,
+                    }
+                ),
+                "bytes": b"\x03\x42\x01\x01\x00\x64\x00\xa0\x0f\x20\x00"
+            },
+            {   # START_RECEIVE
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.MEASURE_RADIO_STATUS_REQUEST,
+                    {
+                        "mode": sr920.SR920RadioMeasurementMode.START_RECEIVE,
+                        "target": "0010",
+                    }
+                ),
+                "bytes": b"\x03\x42\x02\x10\x00"
+            },
+            {   # RESULT
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.MEASURE_RADIO_STATUS_RESPONSE,
+                    {
+                        "result": 0,
+                        "mode": sr920.SR920RadioMeasurementMode.RESULT,
+                        "target": "0010",
+                        "count": 100,
+                        "rssi_max": -53,
+                        "rssi_min": -56,
+                        "rssi_ave_int": -53,
+                        "rssi_ave_frac": 87
+                    }
+                ),
+                "bytes": b"\x03\x43\x00\x03\x10\x00\x64\x00\xcb\xc8\xcb\x57"
+            },
+            {   # ABORT
+                "command": sr920.SR920Command(
+                    sr920.SR920CommandId.MEASURE_RADIO_STATUS_RESPONSE,
+                    {
+                        "result": 0,
+                        "mode": sr920.SR920RadioMeasurementMode.ABORT,
+                        "target": "0001",
+                    }
+                ),
+                "bytes": b"\x03\x43\x00\x04\x01\x00"
+            },
             {   # START
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
