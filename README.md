@@ -54,3 +54,20 @@ True
 
 Please see [references](https://github.com/556adarah/smarthop/wiki/References) for details.
 Note that references are provided only in Japanese.
+
+## History
+
+### v0.1 beta 2
+
+- NEW: SR920 supports radio status measurement, firmware update and channel scan features.
+- NEW: SR920.mac_address property.
+- NEW: 4 shortcut and 1 new methods for controling fixed address list.
+- NEW: tqdm package required.
+- CHANGE: rename parameter on NETWORK_STATE_CHANGED_NOTIFICATION and SR920.get_network_address(); coordinator_address -> coordinator
+- CHANGE: refine command timeout.
+- FIX: wrong value of SR920CommandId.
+- FIX: misspelled argument on SR920.measure_rtt().
+
+### v0.1 beta 1
+
+- Initial beta release for smarthop package.

@@ -176,8 +176,10 @@ class SR920(contextlib.AbstractContextManager):
             >>> sr.start()
             SR920Command: command_id=SR920CommandId.NETWORK_STATE_CHANGED_NOTIFICATION,
             parameters={'state': <SR920NetworkState.ADDRESS_CHANGED: 0>,
-            'short_address': '0001', 'pan_id': '0123', 'coordinator_address': 'ffff'}
+            'short_address': '0001', 'pan_id': '0123', 'coordinator': 'ffff'}
             True
+            >>> # note that 'coordinator_address' was used in v0.1 beta 1, instead of
+            'coordinator'.
 
             >>> # receive NETWORK_STATE_CHANGED_NOTIFICATION: NODE_CONNECTED
             SR920Command: command_id=SR920CommandId.NETWORK_STATE_CHANGED_NOTIFICATION,
@@ -1450,7 +1452,9 @@ class SR920(contextlib.AbstractContextManager):
 
         Examples:
             >>> sr.get_network_address()
-            {'short_address': '0001', 'pan_id': '0123', 'coordinator_address': 'ffff'}
+            {'short_address': '0001', 'pan_id': '0123', 'coordinator': 'ffff'}
+            >>> # note that 'coordinator_address' was used in v0.1 beta 1, instead of
+            'coordinator'.
         """
         _logger.debug("enter get_network_address()")
 
