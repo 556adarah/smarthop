@@ -6,7 +6,10 @@
     "TX_POWER": {
       "type": "string",
       "title": "送信出力",
-      "enum": ["TX_1mW", "TX_20mW"],
+      "enum": [
+        "TX_1mW",
+        "TX_20mW"
+      ],
       "default": "TX_20mW"
     },
     "LED": {
@@ -29,7 +32,12 @@
     "NODE_TYPE": {
       "type": "string",
       "title": "ノードタイプ",
-      "enum": ["COORDINATOR", "ROUTER", "SLEEP_COORDINATOR", "SLEEP_ROUTER"],
+      "enum": [
+        "COORDINATOR",
+        "ROUTER",
+        "SLEEP_COORDINATOR",
+        "SLEEP_ROUTER"
+      ],
       "default": "SLEEP_ROUTER"
     },
     "CHANNEL": {
@@ -59,7 +67,12 @@
     "OPERATION_MODE": {
       "type": "string",
       "title": "動作モード",
-      "enum": ["POWER_SAVING", "BALANCE", "LOW_LATENCY", "NON_SLEEP"],
+      "enum": [
+        "POWER_SAVING",
+        "BALANCE",
+        "LOW_LATENCY",
+        "NON_SLEEP"
+      ],
       "default": "LOW_LATENCY"
     },
     "FIXED_ADDRESSES": {
@@ -71,29 +84,199 @@
           "title": "MACアドレス",
           "pattern": "^[0-9a-fA-F]{16}$"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "additionalProperties": true
   },
   "dependencies": {
-    "OPERATION_MODE": ["NODE_TYPE"],
+    "OPERATION_MODE": [
+      "NODE_TYPE"
+    ],
     "FIXED_ADDRESSES": {
       "properties": {
         "NODE_TYPE": {
-          "enum": ["COORDINATOR", "SLEEP_COORDINATOR"]
+          "enum": [
+            "COORDINATOR",
+            "SLEEP_COORDINATOR"
+          ]
         }
-      }
+      },
+      "required": [
+        "NODE_TYPE"
+      ]
     }
   },
   "allOf": [
     {
       "if": {
         "properties": {
-          "ENABLE_TIME_SYNC": { "const": true }
+          "ENABLE_TIME_SYNC": {
+            "const": true
+          }
+        },
+        "required": [
+          "ENABLE_TIME_SYNC"
+        ]
+      },
+      "then": {
+        "required": [
+          "OPERATION_MODE"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "OPERATION_MODE": false
         }
       },
       "then": {
-        "required": ["OPERATION_MODE"]
+        "properties": {
+          "PARENT_SELECTION_MODE": {
+            "type": "string",
+            "title": "中継親選択モード",
+            "pattern": "^0[01]$",
+            "default": "01"
+          },
+          "HELLO_INTERVAL": {
+            "type": "string",
+            "title": "HELLO送信設定",
+            "pattern": "^[0-7][0-F]$",
+            "default": "30"
+          },
+          "RREC_INTERVAL": {
+            "type": "string",
+            "title": "RREC送信設定",
+            "pattern": "^[0-7][0-F]$",
+            "default": "30"
+          },
+          "UPLINK_RETRY": {
+            "type": "integer",
+            "title": "上り再送設定",
+            "maximum": 255,
+            "minimum": 0,
+            "default": 2
+          },
+          "DOWNLINK_RETRY": {
+            "type": "integer",
+            "title": "下り再送設定",
+            "maximum": 255,
+            "minimum": 0,
+            "default": 2
+          },
+          "HELLO_REQUEST_INTERVAL": {
+            "type": "integer",
+            "title": "HELLO要求設定",
+            "maximum": 30000,
+            "minimum": 1,
+            "default": 15
+          },
+          "ROUTE_EXPIRED": {
+            "type": "integer",
+            "title": "経路キャッシュ時間",
+            "maximum": 4294967295,
+            "minimum": 0,
+            "default": 2875000
+          }
+        },
+        "dependencies": {
+          "ROUTE_EXPIRED": {
+            "properties": {
+              "NODE_TYPE": {
+                "enum": [
+                  "COORDINATOR",
+                  "SLEEP_COORDINATOR"
+                ]
+              }
+            },
+            "required": [
+              "NODE_TYPE"
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "PARENT_SELECTION_MODE": false,
+          "HELLO_INTERVAL": false,
+          "RREC_INTERVAL": false,
+          "UPLINK_RETRY": false,
+          "DOWNLINK_RETRY": false,
+          "HELLO_REQUEST_INTERVAL": false,
+          "ROUTE_EXPIRED": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "ENABLE_TIME_SYNC": false
+        }
+      },
+      "then": {
+        "properties": {
+          "TIME_SYNC": {
+            "type": "object",
+            "title": "時刻同期設定",
+            "properties": {
+              "interval_unsync": {
+                "type": "integer",
+                "title": "時刻同期前の同期間隔",
+                "anyOf": [
+                  {
+                    "const": 0
+                  },
+                  {
+                    "maximum": 86400,
+                    "minimum": 10
+                  }
+                ],
+                "default": 0
+              },
+              "jitter_unsync": {
+                "type": "integer",
+                "title": "時刻同期前のランダムジッタ",
+                "maximum": 255,
+                "minimum": 0,
+                "default": 0
+              },
+              "interval_sync": {
+                "type": "integer",
+                "title": "時刻同期後の同期間隔",
+                "anyOf": [
+                  {
+                    "const": 0
+                  },
+                  {
+                    "maximum": 86400,
+                    "minimum": 10
+                  }
+                ],
+                "default": 0
+              },
+              "jitter_sync": {
+                "type": "integer",
+                "title": "時刻同期後のランダムジッタ",
+                "maximum": 255,
+                "minimum": 0,
+                "default": 0
+              }
+            },
+            "required": [
+              "interval_unsync",
+              "jitter_unsync",
+              "interval_sync",
+              "jitter_sync"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "TIME_SYNC": false
+        }
       }
     }
   ]

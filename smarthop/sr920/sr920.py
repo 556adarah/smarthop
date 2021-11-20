@@ -460,8 +460,9 @@ class SR920(contextlib.AbstractContextManager):
 
         # operation mode configurations should be retrieved at last
         if "OPERATION_MODE" in configs:
+            value = configs.pop("OPERATION_MODE")
+
             try:
-                value = configs.pop("OPERATION_MODE")
                 mode = sr920.SR920OperationMode[value]
             except KeyError:
                 _logger.error("invalid value: %s", value)
@@ -473,14 +474,24 @@ class SR920(contextlib.AbstractContextManager):
                 else sr920.SR920NodeType.SLEEP_ROUTER
             )
             time_sync = (
-                configs.pop("ENABLE_TIME_SYNC")
-                if "ENABLE_TIME_SYNC" in configs
-                else False
+                configs["ENABLE_TIME_SYNC"] if "ENABLE_TIME_SYNC" in configs else False
             )
 
             configs.update(
                 SR920._get_operation_mode_configs(mode, node_type, time_sync)
             )
+
+        # disable time sync
+        if "ENABLE_TIME_SYNC" in configs:
+            time_sync = configs.pop("ENABLE_TIME_SYNC")
+
+            if not time_sync:
+                configs[sr920.SR920ConfigId.TIME_SYNC] = {
+                    "interval_unsync": 0,
+                    "jitter_unsync": 0,
+                    "interval_sync": 0,
+                    "jitter_sync": 0,
+                }
 
         _logger.debug("configs: %s", configs)
 
@@ -493,6 +504,8 @@ class SR920(contextlib.AbstractContextManager):
             )
 
         if "FIXED_ADDRESSES" in configs:
+            self.reset_fixed_address()
+
             fixed = configs.pop("FIXED_ADDRESSES")
 
             for short_address in fixed:
@@ -500,8 +513,8 @@ class SR920(contextlib.AbstractContextManager):
 
             self.save_fixed_address()
 
-        for config_id in configs:
-            self.write_config(config_id, configs[config_id], write_to)
+        for (config_id, config_value) in configs.items():
+            self.write_config(config_id, config_value, write_to)
 
         return True
 
@@ -1650,9 +1663,9 @@ class SR920(contextlib.AbstractContextManager):
 
         if mode == sr920.SR920OperationMode.POWER_SAVING:
             configs = {
-                sr920.SR920ConfigId.PARENT_SELECTION_MODE: b"\x00",  # low speed
-                sr920.SR920ConfigId.HELLO_INTERVAL: b"\x4b",  # 3.7h
-                sr920.SR920ConfigId.RREC_INTERVAL: b"\x41",  # 51min
+                sr920.SR920ConfigId.PARENT_SELECTION_MODE: "00",  # low speed
+                sr920.SR920ConfigId.HELLO_INTERVAL: "4B",  # 3.7h
+                sr920.SR920ConfigId.RREC_INTERVAL: "41",  # 51min
                 sr920.SR920ConfigId.UPLINK_RETRY: 2,
                 sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
                 sr920.SR920ConfigId.SLEEP_INTERVAL: 100,  # 2sec
@@ -1667,9 +1680,9 @@ class SR920(contextlib.AbstractContextManager):
             }
         elif mode == sr920.SR920OperationMode.BALANCE:
             configs = {
-                sr920.SR920ConfigId.PARENT_SELECTION_MODE: b"\x00",  # low speed
-                sr920.SR920ConfigId.HELLO_INTERVAL: b"\x40",  # 34.1min
-                sr920.SR920ConfigId.RREC_INTERVAL: b"\x3f",  # 17.5min
+                sr920.SR920ConfigId.PARENT_SELECTION_MODE: "00",  # low speed
+                sr920.SR920ConfigId.HELLO_INTERVAL: "40",  # 34.1min
+                sr920.SR920ConfigId.RREC_INTERVAL: "3F",  # 17.5min
                 sr920.SR920ConfigId.UPLINK_RETRY: 2,
                 sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
                 sr920.SR920ConfigId.SLEEP_INTERVAL: 25,  # 500msec
@@ -1684,9 +1697,9 @@ class SR920(contextlib.AbstractContextManager):
             }
         elif mode == sr920.SR920OperationMode.LOW_LATENCY:
             configs = {
-                sr920.SR920ConfigId.PARENT_SELECTION_MODE: b"\x01",  # high speed
-                sr920.SR920ConfigId.HELLO_INTERVAL: b"\x30",  # 9.6min
-                sr920.SR920ConfigId.RREC_INTERVAL: b"\x2b",  # 7min
+                sr920.SR920ConfigId.PARENT_SELECTION_MODE: "01",  # high speed
+                sr920.SR920ConfigId.HELLO_INTERVAL: "30",  # 9.6min
+                sr920.SR920ConfigId.RREC_INTERVAL: "2B",  # 7min
                 sr920.SR920ConfigId.UPLINK_RETRY: 2,
                 sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
                 sr920.SR920ConfigId.SLEEP_INTERVAL: 5,  # 100msec
@@ -1701,9 +1714,9 @@ class SR920(contextlib.AbstractContextManager):
             }
         elif mode == sr920.SR920OperationMode.NON_SLEEP:
             configs = {
-                sr920.SR920ConfigId.PARENT_SELECTION_MODE: b"\x01",  # high speed
-                sr920.SR920ConfigId.HELLO_INTERVAL: b"\x20",  # 1.1min
-                sr920.SR920ConfigId.RREC_INTERVAL: b"\x23",  # 2.6min
+                sr920.SR920ConfigId.PARENT_SELECTION_MODE: "01",  # high speed
+                sr920.SR920ConfigId.HELLO_INTERVAL: "20",  # 1.1min
+                sr920.SR920ConfigId.RREC_INTERVAL: "23",  # 2.6min
                 sr920.SR920ConfigId.UPLINK_RETRY: 2,
                 sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
                 sr920.SR920ConfigId.HELLO_REQUEST_INTERVAL: 15,
@@ -1720,11 +1733,6 @@ class SR920(contextlib.AbstractContextManager):
             del configs[sr920.SR920ConfigId.ROUTE_EXPIRED]
 
         if configs and not time_sync:
-            configs[sr920.SR920ConfigId.TIME_SYNC] = {
-                "interval_unsync": 0,
-                "jitter_unsync": 0,
-                "interval_sync": 0,
-                "jitter_sync": 0,
-            }
+            del configs[sr920.SR920ConfigId.TIME_SYNC]
 
         return configs

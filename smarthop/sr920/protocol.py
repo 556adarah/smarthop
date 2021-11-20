@@ -7,6 +7,7 @@ import queue
 import threading
 
 import serial
+
 from serial import threaded
 
 from smarthop import sr920

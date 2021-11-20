@@ -1,8 +1,8 @@
 """Package for handling the OKI SmartHop SR module."""
 
-from smarthop.sr920.sr920 import *
-from smarthop.sr920.enums import *
 from smarthop.sr920.command import *
+from smarthop.sr920.enums import *
+from smarthop.sr920.sr920 import *
 
 __all__ = [
     "SR920",

@@ -391,7 +391,9 @@
           "type": "select:state",
           "cases": [
             {
-              "case": ["ADDRESS_CHANGED"],
+              "case": [
+                "ADDRESS_CHANGED"
+              ],
               "parameters": [
                 {
                   "type": "ref:network_address"
@@ -406,11 +408,16 @@
               ]
             },
             {
-              "case": ["MODULE_INITIALIZED"],
+              "case": [
+                "MODULE_INITIALIZED"
+              ],
               "parameters": []
             },
             {
-              "case": ["NODE_CONNECTED", "NODE_DISCONNECTED"],
+              "case": [
+                "NODE_CONNECTED",
+                "NODE_DISCONNECTED"
+              ],
               "parameters": [
                 {
                   "type": "ref:node_info"
@@ -836,7 +843,9 @@
           "type": "select:mode",
           "cases": [
             {
-              "case": ["START_SEND"],
+              "case": [
+                "START_SEND"
+              ],
               "parameters": [
                 {
                   "name": "count",
@@ -895,7 +904,9 @@
           "type": "select:mode",
           "cases": [
             {
-              "case": ["RESULT"],
+              "case": [
+                "RESULT"
+              ],
               "parameters": [
                 {
                   "name": "count",
@@ -967,7 +978,9 @@
           "type": "select:sub_command_id",
           "cases": [
             {
-              "case": ["START"],
+              "case": [
+                "START"
+              ],
               "parameters": [
                 {
                   "name": "length",
@@ -1011,7 +1024,9 @@
               ]
             },
             {
-              "case": ["WRITE"],
+              "case": [
+                "WRITE"
+              ],
               "parameters": [
                 {
                   "name": "length",
@@ -1048,7 +1063,9 @@
               ]
             },
             {
-              "case": ["CHECK"],
+              "case": [
+                "CHECK"
+              ],
               "parameters": [
                 {
                   "name": "length",
@@ -1073,7 +1090,9 @@
               ]
             },
             {
-              "case": ["RESET"],
+              "case": [
+                "RESET"
+              ],
               "parameters": [
                 {
                   "name": "length",
@@ -1091,7 +1110,9 @@
               ]
             },
             {
-              "case": ["GET_VERSION"],
+              "case": [
+                "GET_VERSION"
+              ],
               "parameters": [
                 {
                   "name": "length",
@@ -1166,7 +1187,11 @@
           "type": "select:sub_command_id",
           "cases": [
             {
-              "case": ["START", "WRITE", "CHECK"],
+              "case": [
+                "START",
+                "WRITE",
+                "CHECK"
+              ],
               "parameters": [
                 {
                   "name": "source",
@@ -1178,11 +1203,15 @@
               ]
             },
             {
-              "case": ["RESET"],
+              "case": [
+                "RESET"
+              ],
               "parameters": []
             },
             {
-              "case": ["GET_VERSION"],
+              "case": [
+                "GET_VERSION"
+              ],
               "parameters": [
                 {
                   "name": "version",
@@ -1385,7 +1414,9 @@
         "type": "select:config_id",
         "cases": [
           {
-            "case": ["TX_POWER"],
+            "case": [
+              "TX_POWER"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1396,7 +1427,9 @@
             ]
           },
           {
-            "case": ["MAC_ADDRESS"],
+            "case": [
+              "MAC_ADDRESS"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1408,7 +1441,9 @@
             ]
           },
           {
-            "case": ["ASYNC_FALLBACK_COUNT"],
+            "case": [
+              "ASYNC_FALLBACK_COUNT"
+            ],
             "parameters": [
               {
                 "name": "reserved",
@@ -1433,7 +1468,9 @@
             ]
           },
           {
-            "case": ["LED"],
+            "case": [
+              "LED"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1444,7 +1481,9 @@
             ]
           },
           {
-            "case": ["DUMMY_SIZE"],
+            "case": [
+              "DUMMY_SIZE"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1456,7 +1495,9 @@
             ]
           },
           {
-            "case": ["PARENT_SELECTION_MODE"],
+            "case": [
+              "PARENT_SELECTION_MODE"
+            ],
             "parameters": [
               {
                 "name": "reserved",
@@ -1468,7 +1509,7 @@
               {
                 "name": "value",
                 "description": "中継親選択モード",
-                "type": "bytes",
+                "type": "hex",
                 "length": 1
               },
               {
@@ -1481,7 +1522,9 @@
             ]
           },
           {
-            "case": ["ENABLE_ENCRYPTION"],
+            "case": [
+              "ENABLE_ENCRYPTION"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1494,7 +1537,9 @@
             ]
           },
           {
-            "case": ["AUTO_START"],
+            "case": [
+              "AUTO_START"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1507,7 +1552,9 @@
             ]
           },
           {
-            "case": ["MAC_RETRY_COUNT"],
+            "case": [
+              "MAC_RETRY_COUNT"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1518,7 +1565,9 @@
             ]
           },
           {
-            "case": ["NODE_TYPE"],
+            "case": [
+              "NODE_TYPE"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1529,7 +1578,9 @@
             ]
           },
           {
-            "case": ["NETWORK_ADDRESS"],
+            "case": [
+              "NETWORK_ADDRESS"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1544,12 +1595,14 @@
             ]
           },
           {
-            "case": ["HELLO_INTERVAL"],
+            "case": [
+              "HELLO_INTERVAL"
+            ],
             "parameters": [
               {
                 "name": "value",
                 "description": "HELLO送信設定",
-                "type": "bytes",
+                "type": "hex",
                 "length": 1
               },
               {
@@ -1562,12 +1615,14 @@
             ]
           },
           {
-            "case": ["RREC_INTERVAL"],
+            "case": [
+              "RREC_INTERVAL"
+            ],
             "parameters": [
               {
                 "name": "value",
                 "description": "RREC送信設定",
-                "type": "bytes",
+                "type": "hex",
                 "length": 1
               },
               {
@@ -1580,7 +1635,9 @@
             ]
           },
           {
-            "case": ["UPLINK_RETRY"],
+            "case": [
+              "UPLINK_RETRY"
+            ],
             "parameters": [
               {
                 "name": "reserved",
@@ -1605,7 +1662,9 @@
             ]
           },
           {
-            "case": ["DOWNLINK_RETRY"],
+            "case": [
+              "DOWNLINK_RETRY"
+            ],
             "parameters": [
               {
                 "name": "reserved",
@@ -1630,7 +1689,9 @@
             ]
           },
           {
-            "case": ["SLEEP_INTERVAL"],
+            "case": [
+              "SLEEP_INTERVAL"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1641,7 +1702,9 @@
             ]
           },
           {
-            "case": ["UPLINK_STATISTICS"],
+            "case": [
+              "UPLINK_STATISTICS"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1656,7 +1719,9 @@
             ]
           },
           {
-            "case": ["DOWNLINK_STATISTICS"],
+            "case": [
+              "DOWNLINK_STATISTICS"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1671,7 +1736,9 @@
             ]
           },
           {
-            "case": ["RREC_STATISTICS"],
+            "case": [
+              "RREC_STATISTICS"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1686,7 +1753,9 @@
             ]
           },
           {
-            "case": ["HELLO_STATISTICS"],
+            "case": [
+              "HELLO_STATISTICS"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1701,7 +1770,9 @@
             ]
           },
           {
-            "case": ["PREFERRED_PARENT_NODE"],
+            "case": [
+              "PREFERRED_PARENT_NODE"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1731,7 +1802,9 @@
             ]
           },
           {
-            "case": ["DELETE_UNREACHABLE_NEIGHBOR_INFO"],
+            "case": [
+              "DELETE_UNREACHABLE_NEIGHBOR_INFO"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1744,7 +1817,9 @@
             ]
           },
           {
-            "case": ["CHANNEL"],
+            "case": [
+              "CHANNEL"
+            ],
             "parameters": [
               {
                 "name": "reserved",
@@ -1762,7 +1837,9 @@
             ]
           },
           {
-            "case": ["PAN_ID"],
+            "case": [
+              "PAN_ID"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1774,7 +1851,9 @@
             ]
           },
           {
-            "case": ["ENCRYPTION_KEY"],
+            "case": [
+              "ENCRYPTION_KEY"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1785,7 +1864,9 @@
             ]
           },
           {
-            "case": ["HELLO_REQUEST_INTERVAL"],
+            "case": [
+              "HELLO_REQUEST_INTERVAL"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1798,7 +1879,9 @@
                 "type": "select:value",
                 "cases": [
                   {
-                    "case": [80],
+                    "case": [
+                      80
+                    ],
                     "parameters": [
                       {
                         "name": "reserved",
@@ -1825,7 +1908,9 @@
             ]
           },
           {
-            "case": ["ROUTE_EXPIRED"],
+            "case": [
+              "ROUTE_EXPIRED"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1837,7 +1922,9 @@
             ]
           },
           {
-            "case": ["KEY_RENEWAL_INTERVAL"],
+            "case": [
+              "KEY_RENEWAL_INTERVAL"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1849,7 +1936,9 @@
             ]
           },
           {
-            "case": ["TIME_SYNC"],
+            "case": [
+              "TIME_SYNC"
+            ],
             "parameters": [
               {
                 "name": "value",
@@ -1860,7 +1949,8 @@
                     "name": "interval_unsync",
                     "description": "時刻同期前の同期間隔",
                     "type": "int",
-                    "length": 4
+                    "length": 4,
+                    "byteorder": "little"
                   },
                   {
                     "name": "jitter_unsync",
@@ -1872,7 +1962,8 @@
                     "name": "interval_sync",
                     "description": "時刻同期後の同期間隔",
                     "type": "int",
-                    "length": 4
+                    "length": 4,
+                    "byteorder": "little"
                   },
                   {
                     "name": "jitter_sync",
@@ -1885,7 +1976,9 @@
             ]
           },
           {
-            "case": ["ENABLE_DATA_ENCRYPTION"],
+            "case": [
+              "ENABLE_DATA_ENCRYPTION"
+            ],
             "parameters": [
               {
                 "name": "value",

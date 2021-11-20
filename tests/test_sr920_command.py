@@ -20,7 +20,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x80\x02",
             },
-            {   # type: enum
+            {  # enums
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.READ_CONFIG_RESPONSE,
                     {
@@ -31,7 +31,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x81\x00\x02\x02",
             },
-            {   # type: hex
+            {  # hex
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.READ_CONFIG_RESPONSE,
                     {
@@ -42,7 +42,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x81\x00\x12\x23\x01\x00\x00\x00\x00\x00\x00",
             },
-            {   # type: bool
+            {  # bool
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.READ_CONFIG_RESPONSE,
                     {
@@ -53,7 +53,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x81\x00\x30\x01",
             },
-            {   # type: int
+            {  # int
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.READ_CONFIG_RESPONSE,
                     {
@@ -64,18 +64,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x81\x00\x31\x08",
             },
-            {   # type: bytes
-                "command": sr920.SR920Command(
-                    sr920.SR920CommandId.READ_CONFIG_RESPONSE,
-                    {
-                        "result": 0,
-                        "config_id": sr920.SR920ConfigId.PARENT_SELECTION_MODE,
-                        "value": b"\x01",
-                    },
-                ),
-                "bytes": b"\x07\x81\x00\xa2\x03\x00\x00\x01\x01\x00",
-            },
-            {   # type: bool customized
+            {  # bool customized
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.READ_CONFIG_RESPONSE,
                     {
@@ -86,7 +75,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x81\x00\xa6\x6a",
             },
-            {   # type: object
+            {  # object
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.READ_CONFIG_RESPONSE,
                     {
@@ -249,7 +238,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\xa8\x00\x04",
             },
-            {   # ADDRESS_CHANGED
+            {  # ADDRESS_CHANGED
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.NETWORK_STATE_CHANGED_NOTIFICATION,
                     {
@@ -261,7 +250,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\xa9\x00\x01\x00\x23\x01\xff\xff",
             },
-            {   # MODULE_INITIALIZED
+            {  # MODULE_INITIALIZED
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.NETWORK_STATE_CHANGED_NOTIFICATION,
                     {
@@ -270,7 +259,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\xa9\x02",
             },
-            {   # NODE_CONNECTED
+            {  # NODE_CONNECTED
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.NETWORK_STATE_CHANGED_NOTIFICATION,
                     {
@@ -281,7 +270,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\xa9\x03\x10\x00\x67\x45\x00\x00\x00\x00\x00\x00",
             },
-            {   # NODE_DISCONNECTED
+            {  # NODE_DISCONNECTED
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.NETWORK_STATE_CHANGED_NOTIFICATION,
                     {
@@ -296,7 +285,7 @@ class TestSR920Command(unittest.TestCase):
                 "command": sr920.SR920Command(sr920.SR920CommandId.RESET_REQUEST),
                 "bytes": b"\x07\xf0\x01\x00",
             },
-            {   # succeeded
+            {  # succeeded
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.RESET_RESPONSE,
                     {
@@ -305,12 +294,12 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\xf1\x00",
             },
-            {   # failed
+            {  # failed
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.RESET_RESPONSE,
                     {
                         "result": 1,
-                        "reset_parameter": b"\xff\xff\xff"
+                        "reset_parameter": b"\xff\xff\xff",
                     },
                 ),
                 "bytes": b"\x07\xf1\x01\xff\xff\xff",
@@ -517,7 +506,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x03\x41\x00\x10\x00\x67\x45\x00\x00\x00\x00\x00\x00",
             },
-            {   # START_SEND
+            {  # START_SEND
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.MEASURE_RADIO_STATUS_REQUEST,
                     {
@@ -526,21 +515,21 @@ class TestSR920Command(unittest.TestCase):
                         "count": 100,
                         "interval": 4000,
                         "length": 32,
-                    }
+                    },
                 ),
-                "bytes": b"\x03\x42\x01\x01\x00\x64\x00\xa0\x0f\x20\x00"
+                "bytes": b"\x03\x42\x01\x01\x00\x64\x00\xa0\x0f\x20\x00",
             },
-            {   # START_RECEIVE
+            {  # START_RECEIVE
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.MEASURE_RADIO_STATUS_REQUEST,
                     {
                         "mode": sr920.SR920RadioMeasurementMode.START_RECEIVE,
                         "target": "0010",
-                    }
+                    },
                 ),
-                "bytes": b"\x03\x42\x02\x10\x00"
+                "bytes": b"\x03\x42\x02\x10\x00",
             },
-            {   # RESULT
+            {  # RESULT
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.MEASURE_RADIO_STATUS_RESPONSE,
                     {
@@ -551,23 +540,23 @@ class TestSR920Command(unittest.TestCase):
                         "rssi_max": -53,
                         "rssi_min": -56,
                         "rssi_ave_int": -53,
-                        "rssi_ave_frac": 87
-                    }
+                        "rssi_ave_frac": 87,
+                    },
                 ),
-                "bytes": b"\x03\x43\x00\x03\x10\x00\x64\x00\xcb\xc8\xcb\x57"
+                "bytes": b"\x03\x43\x00\x03\x10\x00\x64\x00\xcb\xc8\xcb\x57",
             },
-            {   # ABORT
+            {  # ABORT
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.MEASURE_RADIO_STATUS_RESPONSE,
                     {
                         "result": 0,
                         "mode": sr920.SR920RadioMeasurementMode.ABORT,
                         "target": "0001",
-                    }
+                    },
                 ),
-                "bytes": b"\x03\x43\x00\x04\x01\x00"
+                "bytes": b"\x03\x43\x00\x04\x01\x00",
             },
-            {   # START
+            {  # START
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
                     {
@@ -575,7 +564,7 @@ class TestSR920Command(unittest.TestCase):
                         "seq_no": 1,
                         "version": "SRMP02020005",
                         "size": 151754,
-                        "checksum": b"\xd6\xcc"
+                        "checksum": b"\xd6\xcc",
                     },
                 ),
                 "bytes": b"\x07\x40\x01\x02\x00\x01\x00\x15\x00\x00\x05\x53\x52\x4d\x50\x30\x32\x30\x32\x30\x30\x30\x35\x00\x02\x50\xca\xd6\xcc",
@@ -593,7 +582,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x41\x00\x02\x02\x00\x01\x00\x03\x00\x00\x00",
             },
-            {   # WRITE
+            {  # WRITE
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
                     {
@@ -601,10 +590,11 @@ class TestSR920Command(unittest.TestCase):
                         "seq_no": 1,
                         "page_no": 1,
                         "frame_no": 1,
-                        "frame": b"\xff" * 1024
+                        "frame": b"\xff" * 1024,
                     },
                 ),
-                "bytes": b"\x07\x40\x01\x03\x00\x01\x04\x04\x00\x00\x01\x01" + b"\xff" * 1024,
+                "bytes": b"\x07\x40\x01\x03\x00\x01\x04\x04\x00\x00\x01\x01"
+                + b"\xff" * 1024,
             },
             {
                 "command": sr920.SR920Command(
@@ -619,7 +609,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x41\x00\x02\x03\x00\x01\x00\x03\x00\x00\x00",
             },
-            {   # CHECK
+            {  # CHECK
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
                     {
@@ -643,7 +633,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x41\x00\x02\x04\x00\x01\x00\x03\x00\x00\x00",
             },
-            {   # RESET
+            {  # RESET
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
                     {
@@ -667,7 +657,7 @@ class TestSR920Command(unittest.TestCase):
                 ),
                 "bytes": b"\x07\x41\x00\x02\x05\x00\x01\x00\x01\x00",
             },
-            {   # GET_VERSION
+            {  # GET_VERSION
                 "command": sr920.SR920Command(
                     sr920.SR920CommandId.UPDATE_FIRMWARE_REQUEST,
                     {
@@ -745,10 +735,10 @@ class TestSR920Command(unittest.TestCase):
                         "mode": sr920.SR920ChannelScanMode.START,
                         "channel": 33,
                         "count": 500,
-                        "interval": 2
-                    }
+                        "interval": 2,
+                    },
                 ),
-                "bytes": b"\x07\x09\x00\x21\xf4\x01\x02\x00"
+                "bytes": b"\x07\x09\x00\x21\xf4\x01\x02\x00",
             },
             {
                 "command": sr920.SR920Command(
@@ -761,11 +751,11 @@ class TestSR920Command(unittest.TestCase):
                         "interval": 2,
                         "rssi_max": -84,
                         "rssi_min": -92,
-                        "rssi_ave": -8775
-                    }
+                        "rssi_ave": -8775,
+                    },
                 ),
-                "bytes": b"\x07\x0a\x00\x00\x21\xf4\x01\x02\x00\xac\xa4\xb9\xdd"
-            }
+                "bytes": b"\x07\x0a\x00\x00\x21\xf4\x01\x02\x00\xac\xa4\xb9\xdd",
+            },
         ]
 
     def test_constructor(self):
