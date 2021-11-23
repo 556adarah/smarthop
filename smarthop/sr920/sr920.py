@@ -1,6 +1,7 @@
 """Definition of a class for the OKI SmartHop SR module API wrapper."""
 
 import contextlib
+import csv
 import json
 import logging
 import math
@@ -378,13 +379,15 @@ class SR920(contextlib.AbstractContextManager):
             sr920.SR920Command(sr920.SR920CommandId.RESET_CONFIG_REQUEST)
         )
 
-    def load_config(self, config_file, write_to="ram"):
+    def load_config(self, config_file, write_to="ram", file_type="json"):
         """Loads configurations from the specified configuration file.
 
         Args:
             config_file: A path to the configuration file.
-            write_to: Configuration will be written to RAM if "ram" is specified,
+            write_to: Configurations will be written to RAM if "ram" is specified,
                 otherwise to Flash.
+            file_type: Load configurations from JSON file if "json" is specified,
+                otherwise from CSV file.
 
         Returns:
             True if succeeded to load configurations, otherwise False.
@@ -392,6 +395,10 @@ class SR920(contextlib.AbstractContextManager):
         Examples:
             >>> load configurations
             >>> sr.load_config("sr920_config.json")
+            True
+
+            >>> load configurations from CSV
+            >>> sr.load_config("sr920_config.csv", file_type="csv")
             True
 
             >>> load configurations to Flash
@@ -404,11 +411,20 @@ class SR920(contextlib.AbstractContextManager):
             True
         """
         _logger.debug(
-            "enter load_config(): config_file=%s, write_to=%s", config_file, write_to
+            "enter load_config(): config_file=%s, write_to=%s, file_type=%s",
+            config_file,
+            write_to,
+            file_type,
         )
 
-        with open(config_file) as fin:
-            json_data = json.load(fin)
+        if file_type == "json":
+            with open(config_file) as fin:
+                json_data = json.load(fin)
+        else:
+            json_data = SR920._load_config_from_csv(config_file)
+
+            if not json_data:
+                return False
 
         json_schema = json.loads(
             pkgutil.get_data("smarthop", "schemas/sr920_config.schema.json")
@@ -1734,5 +1750,37 @@ class SR920(contextlib.AbstractContextManager):
 
         if configs and not time_sync:
             del configs[sr920.SR920ConfigId.TIME_SYNC]
+
+        return configs
+
+    @staticmethod
+    def _load_config_from_csv(config_file):
+        _logger.debug("enter _load_config_from_csv(): config_file=%s", config_file)
+
+        with open(config_file, encoding="shift_jis") as fin:
+            reader = csv.reader(fin)
+            csv_file = [row for row in reader]
+
+        csv_key = csv_file[1]
+        csv_value = csv_file[2]
+
+        if not (len(csv_file) == 3 and len(csv_key) == len(csv_value) == 9):
+            _logger.error("invalid csv file: %s", config_file)
+
+            return None
+
+        operation_mode = ["POWER_SAVING", "BALANCE", "LOW_LATENCY"]
+
+        configs = {
+            "NODE_TYPE": sr920.SR920NodeType(int(csv_value[0])).name,
+            "PAN_ID": csv_value[1],
+            "CHANNEL": int(csv_value[2]) + 32,
+            "TX_POWER": sr920.SR920TxPower(int(csv_value[3])).name,
+            "ENCRYPTION_KEY": csv_value[4],
+            "DUMMY_SIZE": int(csv_value[5]),
+            "AUTO_START": csv_value[6] == "0",
+            "OPERATION_MODE": operation_mode[int(csv_value[7])],
+            "LED": csv_value[8] == "1",
+        }
 
         return configs
