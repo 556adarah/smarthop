@@ -133,6 +133,23 @@ class TestSR920ConfigSchema(unittest.TestCase):
             }
         )
 
+        self.assert_validation_succeeded(
+            {
+                "NODE_TYPE": "SLEEP_ROUTER",
+                "PREFERRED_PARENT_NODE": ["0123", "4567", "89AB"],
+            }
+        )
+
+        # over max items
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "ROUTER",
+                    "PREFERRED_PARENT_NODE": ["0123", "4567", "89AB", "CDEF"],
+                },
+                self.schema,
+            )
+
         # invalid value
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.validate(
@@ -220,27 +237,72 @@ class TestSR920ConfigSchema(unittest.TestCase):
                 self.schema,
             )
 
-    def test_enable_timesync(self):
-        # require OPERATION_MODE if True
-        # note that OPERATION_MODE require NODE_TYPE
+    def test_key_renewal_interval(self):
+        # require NODE_TYPE as COORDINATOR or SLEEP_COORDINATOR
         self.assert_validation_succeeded(
             {
-                "NODE_TYPE": "SLEEP_ROUTER",
-                "OPERATION_MODE": "LOW_LATENCY",
-                "ENABLE_TIME_SYNC": True,
+                "NODE_TYPE": "COORDINATOR",
+                "KEY_RENEWAL_INTERVAL": 0,
             }
         )
 
-        # not require OPERATION_MODE if False
-        self.assert_validation_succeeded({"ENABLE_TIME_SYNC": False})
+        self.assert_validation_succeeded(
+            {
+                "NODE_TYPE": "SLEEP_COORDINATOR",
+                "KEY_RENEWAL_INTERVAL": 86400000,
+            }
+        )
+
+        self.assert_validation_succeeded(
+            {
+                "NODE_TYPE": "COORDINATOR",
+                "KEY_RENEWAL_INTERVAL": 4294967295,
+            }
+        )
+
+        # out of range (0 or 86400000-4294967295)
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "COORDINATOR",
+                    "KEY_RENEWAL_INTERVAL": -1,
+                },
+                self.schema,
+            )
+
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "COORDINATOR",
+                    "KEY_RENEWAL_INTERVAL": 1,
+                },
+                self.schema,
+            )
+
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "COORDINATOR",
+                    "KEY_RENEWAL_INTERVAL": 86399999,
+                },
+                self.schema,
+            )
+
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "COORDINATOR",
+                    "KEY_RENEWAL_INTERVAL": 4294967296,
+                },
+                self.schema,
+            )
 
         # invalid type
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.validate(
                 {
-                    "NODE_TYPE": "SLEEP_ROUTER",
-                    "OPERATION_MODE": "LOW_LATENCY",
-                    "ENABLE_TIME_SYNC": "True",
+                    "NODE_TYPE": "COORDINATOR",
+                    "KEY_RENEWAL_INTERVAL": "0",
                 },
                 self.schema,
             )
@@ -299,6 +361,31 @@ class TestSR920ConfigSchema(unittest.TestCase):
                 {
                     "NODE_TYPE": "SLEEP_ROUTER",
                     "OPERATION_MODE": 0,
+                },
+                self.schema,
+            )
+
+    def test_enable_timesync(self):
+        # require OPERATION_MODE if True
+        # note that OPERATION_MODE require NODE_TYPE
+        self.assert_validation_succeeded(
+            {
+                "NODE_TYPE": "SLEEP_ROUTER",
+                "OPERATION_MODE": "LOW_LATENCY",
+                "ENABLE_TIME_SYNC": True,
+            }
+        )
+
+        # not require OPERATION_MODE if False
+        self.assert_validation_succeeded({"ENABLE_TIME_SYNC": False})
+
+        # invalid type
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "SLEEP_ROUTER",
+                    "OPERATION_MODE": "LOW_LATENCY",
+                    "ENABLE_TIME_SYNC": "True",
                 },
                 self.schema,
             )
@@ -432,6 +519,21 @@ class TestSR920ConfigSchema(unittest.TestCase):
         # invalid type
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.validate({"DOWNLINK_RETRY": "2"}, self.schema)
+
+    def test_sleep_interval(self):
+        self.assert_validation_succeeded({"SLEEP_INTERVAL": 1})
+        self.assert_validation_succeeded({"SLEEP_INTERVAL": 200})
+
+        # out of range (0-255)
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"SLEEP_INTERVAL": 0}, self.schema)
+
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"SLEEP_INTERVAL": 201}, self.schema)
+
+        # invalid type
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"SLEEP_INTERVAL": "5"}, self.schema)
 
     def test_hello_request_interval(self):
         self.assert_validation_succeeded({"HELLO_REQUEST_INTERVAL": 1})
@@ -817,6 +919,33 @@ class TestSR920ConfigSchema(unittest.TestCase):
     def test_dependencies(self):
         # missing NODE_TYPE
         with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"PREFERRED_PARENT_NODE": ["0123"]}, self.schema)
+
+        # NODE_TYPE should be ROUTER or SLEEP_ROUTER
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "COORDINATOR",
+                    "PREFERRED_PARENT_NODE": ["0123"],
+                },
+                self.schema,
+            )
+        # missing NODE_TYPE
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"KEY_RENEWAL_INTERVAL": 0}, self.schema)
+
+        # NODE_TYPE should be COORDINATOR or SLEEP_COORDINATOR
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "SLEEP_ROUTER",
+                    "KEY_RENEWAL_INTERVAL": 0,
+                },
+                self.schema,
+            )
+
+        # missing NODE_TYPE
+        with self.assertRaises(jsonschema.ValidationError):
             jsonschema.validate({"OPERATION_MODE": "POWER_SAVING"}, self.schema)
 
         # missing NODE_TYPE
@@ -829,20 +958,6 @@ class TestSR920ConfigSchema(unittest.TestCase):
                 {
                     "NODE_TYPE": "SLEEP_ROUTER",
                     "FIXED_ADDRESSES": {},
-                },
-                self.schema,
-            )
-
-        # missing NODE_TYPE
-        with self.assertRaises(jsonschema.ValidationError):
-            jsonschema.validate({"PREFERRED_PARENT_NODE": ["0123"]}, self.schema)
-
-        # NODE_TYPE should be ROUTER or SLEEP_ROUTER
-        with self.assertRaises(jsonschema.ValidationError):
-            jsonschema.validate(
-                {
-                    "NODE_TYPE": "COORDINATOR",
-                    "PREFERRED_PARENT_NODE": ["0123"],
                 },
                 self.schema,
             )
@@ -902,6 +1017,17 @@ class TestSR920ConfigSchema(unittest.TestCase):
                     "NODE_TYPE": "SLEEP_ROUTER",
                     "OPERATION_MODE": "POWER_SAVING",
                     "DOWNLINK_RETRY": 2,
+                },
+                self.schema,
+            )
+
+        # OPERATION_MODE and SLEEP_INTERVAL are exclusive
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "SLEEP_ROUTER",
+                    "OPERATION_MODE": "POWER_SAVING",
+                    "SLEEP_INTERVAL": 5,
                 },
                 self.schema,
             )

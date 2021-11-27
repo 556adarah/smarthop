@@ -66,7 +66,8 @@
         "type": "string",
         "title": "ショートアドレス",
         "pattern": "^[0-9a-fA-F]{4}$"
-      }
+      },
+      "maxItems": 3
     },
     "DELETE_UNREACHABLE_NEIGHBOR_INFO": {
       "type": "boolean",
@@ -92,10 +93,19 @@
       "pattern": "^[0-9a-fA-F]{32}$",
       "default": "00000000000000000000000000000001"
     },
-    "ENABLE_TIME_SYNC": {
-      "type": "boolean",
-      "title": "時刻同期設定",
-      "default": false
+    "KEY_RENEWAL_INTERVAL": {
+      "type": "integer",
+      "title": "鍵更新設定",
+      "anyOf": [
+        {
+          "const": 0
+        },
+        {
+          "maximum": 4294967295,
+          "minimum": 86400000
+        }
+      ],
+      "default": 0
     },
     "ENABLE_DATA_ENCRYPTION": {
       "type": "boolean",
@@ -113,6 +123,11 @@
       ],
       "default": "LOW_LATENCY"
     },
+    "ENABLE_TIME_SYNC": {
+      "type": "boolean",
+      "title": "時刻同期設定",
+      "default": false
+    },
     "FIXED_ADDRESSES": {
       "type": "object",
       "title": "固定アドレス設定",
@@ -128,10 +143,20 @@
     "additionalProperties": true
   },
   "dependencies": {
-    "OPERATION_MODE": [
-      "NODE_TYPE"
-    ],
-    "FIXED_ADDRESSES": {
+    "PREFERRED_PARENT_NODE": {
+      "properties": {
+        "NODE_TYPE": {
+          "enum": [
+            "ROUTER",
+            "SLEEP_ROUTER"
+          ]
+        }
+      },
+      "required": [
+        "NODE_TYPE"
+      ]
+    },
+    "KEY_RENEWAL_INTERVAL": {
       "properties": {
         "NODE_TYPE": {
           "enum": [
@@ -144,12 +169,15 @@
         "NODE_TYPE"
       ]
     },
-    "PREFERRED_PARENT_NODE": {
+    "OPERATION_MODE": [
+      "NODE_TYPE"
+    ],
+    "FIXED_ADDRESSES": {
       "properties": {
         "NODE_TYPE": {
           "enum": [
-            "ROUTER",
-            "SLEEP_ROUTER"
+            "COORDINATOR",
+            "SLEEP_COORDINATOR"
           ]
         }
       },
@@ -216,6 +244,13 @@
             "minimum": 0,
             "default": 2
           },
+          "SLEEP_INTERVAL": {
+            "type": "integer",
+            "title": "省電力周期",
+            "maximum": 200,
+            "minimum": 1,
+            "default": 5
+          },
           "HELLO_REQUEST_INTERVAL": {
             "type": "integer",
             "title": "HELLO要求設定",
@@ -254,6 +289,7 @@
           "RREC_INTERVAL": false,
           "UPLINK_RETRY": false,
           "DOWNLINK_RETRY": false,
+          "SLEEP_INTERVAL": false,
           "HELLO_REQUEST_INTERVAL": false,
           "ROUTE_EXPIRED": false
         }

@@ -526,12 +526,13 @@ class SR920(contextlib.AbstractContextManager):
             )
 
         if "FIXED_ADDRESSES" in configs:
-            self.reset_fixed_address()
-
             fixed = configs.pop("FIXED_ADDRESSES")
 
-            for short_address in fixed:
-                self.add_fixed_address(short_address, fixed[short_address])
+            if fixed:
+                for short_address in fixed:
+                    self.add_fixed_address(short_address, fixed[short_address])
+            else:
+                self.reset_fixed_address()
 
             self.save_fixed_address()
 
@@ -539,6 +540,159 @@ class SR920(contextlib.AbstractContextManager):
             self.write_config(config_id, config_value, write_to)
 
         return True
+
+    def extract_config(self):
+        """Extracts configurations from the module.
+
+        Returns:
+            A dict object containing configurations.
+            If you export it as a JSON file, you can load it with the load_config
+            method.
+
+        Examples:
+            >>> # extracts configurations
+            >>> configs = sr.extract_config()
+
+            >>> # output to JSON file
+            >>> import json
+            >>> with open("sr920_config.json", "w") as fp:
+            ...   json.dump(configs, fp)
+            ...
+        """
+        _logger.debug("enter extract_config()")
+
+        configs = {}
+
+        node_type = self.read_config(sr920.SR920ConfigId.NODE_TYPE)
+
+        configs["NODE_TYPE"] = node_type.name
+
+        for config_id in sr920.SR920ConfigId:
+            # skip NODE_TYPE, *_ADDRESS, *_STATISTICS
+            if config_id in [
+                sr920.SR920ConfigId.NODE_TYPE,
+                sr920.SR920ConfigId.MAC_ADDRESS,
+                sr920.SR920ConfigId.NETWORK_ADDRESS,
+                sr920.SR920ConfigId.UPLINK_STATISTICS,
+                sr920.SR920ConfigId.DOWNLINK_STATISTICS,
+                sr920.SR920ConfigId.HELLO_STATISTICS,
+                sr920.SR920ConfigId.RREC_STATISTICS,
+            ]:
+                continue
+
+            if node_type.is_coordinator():
+                # skip router-only parameters
+                if config_id == sr920.SR920ConfigId.PREFERRED_PARENT_NODE:
+                    continue
+            else:
+                # skip coordinator-only parameters
+                if config_id in [
+                    sr920.SR920ConfigId.ROUTE_EXPIRED,
+                    sr920.SR920ConfigId.KEY_RENEWAL_INTERVAL,
+                ]:
+                    continue
+
+            config_value = self.read_config(config_id)
+
+            if config_id == sr920.SR920ConfigId.TX_POWER:
+                configs["TX_POWER"] = config_value.name
+            elif config_id == sr920.SR920ConfigId.PREFERRED_PARENT_NODE:
+                configs["PREFERRED_PARENT_NODE"] = config_value["addresses"]
+            else:
+                configs[config_id.name] = config_value
+
+        # confirm to match one of operation mode
+        for mode in sr920.SR920OperationMode:
+            mode_configs = self._get_operation_mode_configs(mode, node_type, True)
+
+            for (config_id, config_value) in mode_configs.items():
+                if config_id == sr920.SR920ConfigId.TIME_SYNC:
+                    continue
+
+                if configs[config_id.name] != config_value:
+                    break
+            else:
+                configs["OPERATION_MODE"] = mode.name
+
+                configs.pop("PARENT_SELECTION_MODE")
+                configs.pop("HELLO_INTERVAL")
+                configs.pop("RREC_INTERVAL")
+                configs.pop("UPLINK_RETRY")
+                configs.pop("DOWNLINK_RETRY")
+                configs.pop("SLEEP_INTERVAL")
+                configs.pop("HELLO_REQUEST_INTERVAL")
+
+                if node_type.is_coordinator():
+                    configs.pop("ROUTE_EXPIRED")
+
+                if configs["TIME_SYNC"] == mode_configs[sr920.SR920ConfigId.TIME_SYNC]:
+                    configs["ENABLE_TIME_SYNC"] = True
+                    configs.pop("TIME_SYNC")
+                elif configs["TIME_SYNC"] == {
+                    "interval_unsync": 0,
+                    "jitter_unsync": 0,
+                    "interval_sync": 0,
+                    "jitter_sync": 0,
+                }:
+                    configs["ENABLE_TIME_SYNC"] = False
+                    configs.pop("TIME_SYNC")
+
+                break
+
+        defaults = {
+            # "NODE_TYPE": "SLEEP_ROUTER",
+            "TX_POWER": "TX_20mW",
+            "ASYNC_FALLBACK_COUNT": 2,
+            "LED": False,
+            "DUMMY_SIZE": 8,
+            "PARENT_SELECTION_MODE": "01",
+            "ENABLE_ENCRYPTION": True,
+            "AUTO_START": False,
+            "MAC_RETRY_COUNT": 3,
+            "HELLO_INTERVAL": "30",
+            "RREC_INTERVAL": "30",
+            "UPLINK_RETRY": 2,
+            "DOWNLINK_RETRY": 2,
+            "SLEEP_INTERVAL": 5,
+            "PREFERRED_PARENT_NODE": [],
+            "DELETE_UNREACHABLE_NEIGHBOR_INFO": False,
+            "CHANNEL": 33,
+            "PAN_ID": "0001",
+            "ENCRYPTION_KEY": "00000000000000000000000000000001",
+            "HELLO_REQUEST_INTERVAL": 15,
+            "ROUTE_EXPIRED": 2875000,
+            "KEY_RENEWAL_INTERVAL": 0,
+            "TIME_SYNC": {
+                "interval_unsync": 0,
+                "jitter_unsync": 0,
+                "interval_sync": 0,
+                "jitter_sync": 0,
+            },
+            "ENABLE_DATA_ENCRYPTION": True,
+        }
+
+        # remove default value
+        for config_id in list(configs):
+            if config_id not in defaults:
+                continue
+
+            if configs[config_id] == defaults[config_id]:
+                configs.pop(config_id)
+
+        if node_type.is_coordinator():
+            fixed = self.get_node_list(sr920.SR920NodeListType.FIXED_ADDRESS)
+
+            if fixed:
+                configs["FIXED_ADDRESSES"] = {}
+
+                for node in fixed:
+                    configs["FIXED_ADDRESSES"].update(
+                        {
+                            node["short_address"]: node["mac_address"],
+                        }
+                    )
+
+        return configs
 
     def send_data(self, data, destination="0001", nor=3, security=True, ttl=30):
         """Sends the specified data with the specified conditions.
@@ -1686,7 +1840,7 @@ class SR920(contextlib.AbstractContextManager):
         if mode == sr920.SR920OperationMode.POWER_SAVING:
             configs = {
                 sr920.SR920ConfigId.PARENT_SELECTION_MODE: "00",  # low speed
-                sr920.SR920ConfigId.HELLO_INTERVAL: "4B",  # 3.7h
+                sr920.SR920ConfigId.HELLO_INTERVAL: "4b",  # 3.7h
                 sr920.SR920ConfigId.RREC_INTERVAL: "41",  # 51min
                 sr920.SR920ConfigId.UPLINK_RETRY: 2,
                 sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
@@ -1704,7 +1858,7 @@ class SR920(contextlib.AbstractContextManager):
             configs = {
                 sr920.SR920ConfigId.PARENT_SELECTION_MODE: "00",  # low speed
                 sr920.SR920ConfigId.HELLO_INTERVAL: "40",  # 34.1min
-                sr920.SR920ConfigId.RREC_INTERVAL: "3F",  # 17.5min
+                sr920.SR920ConfigId.RREC_INTERVAL: "3f",  # 17.5min
                 sr920.SR920ConfigId.UPLINK_RETRY: 2,
                 sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
                 sr920.SR920ConfigId.SLEEP_INTERVAL: 25,  # 500msec
@@ -1721,7 +1875,7 @@ class SR920(contextlib.AbstractContextManager):
             configs = {
                 sr920.SR920ConfigId.PARENT_SELECTION_MODE: "01",  # high speed
                 sr920.SR920ConfigId.HELLO_INTERVAL: "30",  # 9.6min
-                sr920.SR920ConfigId.RREC_INTERVAL: "2B",  # 7min
+                sr920.SR920ConfigId.RREC_INTERVAL: "2b",  # 7min
                 sr920.SR920ConfigId.UPLINK_RETRY: 2,
                 sr920.SR920ConfigId.DOWNLINK_RETRY: 2,
                 sr920.SR920ConfigId.SLEEP_INTERVAL: 5,  # 100msec
