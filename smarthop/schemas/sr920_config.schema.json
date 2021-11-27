@@ -12,6 +12,13 @@
       ],
       "default": "TX_20mW"
     },
+    "ASYNC_FALLBACK_COUNT": {
+      "type": "integer",
+      "title": "非同期通信切替回数",
+      "maximum": 255,
+      "minimum": 0,
+      "default": 2
+    },
     "LED": {
       "type": "boolean",
       "title": "LED設定",
@@ -24,10 +31,22 @@
       "minimum": 0,
       "default": 8
     },
+    "ENABLE_ENCRYPTION": {
+      "type": "boolean",
+      "title": "暗号化パケットの中継制御",
+      "default": true
+    },
     "AUTO_START": {
       "type": "boolean",
       "title": "NWK自動スタート設定",
       "default": false
+    },
+    "MAC_RETRY_COUNT": {
+      "type": "integer",
+      "title": "MAC再送回数",
+      "maximum": 7,
+      "minimum": 0,
+      "default": 3
     },
     "NODE_TYPE": {
       "type": "string",
@@ -39,6 +58,20 @@
         "SLEEP_ROUTER"
       ],
       "default": "SLEEP_ROUTER"
+    },
+    "PREFERRED_PARENT_NODE": {
+      "type": "array",
+      "title": "優先送信先の設定",
+      "items": {
+        "type": "string",
+        "title": "ショートアドレス",
+        "pattern": "^[0-9a-fA-F]{4}$"
+      }
+    },
+    "DELETE_UNREACHABLE_NEIGHBOR_INFO": {
+      "type": "boolean",
+      "title": "送信失敗時の隣接情報削除",
+      "default": false
     },
     "CHANNEL": {
       "type": "integer",
@@ -63,6 +96,11 @@
       "type": "boolean",
       "title": "時刻同期設定",
       "default": false
+    },
+    "ENABLE_DATA_ENCRYPTION": {
+      "type": "boolean",
+      "title": "ユーザデータ暗号化",
+      "default": true
     },
     "OPERATION_MODE": {
       "type": "string",
@@ -99,6 +137,19 @@
           "enum": [
             "COORDINATOR",
             "SLEEP_COORDINATOR"
+          ]
+        }
+      },
+      "required": [
+        "NODE_TYPE"
+      ]
+    },
+    "PREFERRED_PARENT_NODE": {
+      "properties": {
+        "NODE_TYPE": {
+          "enum": [
+            "ROUTER",
+            "SLEEP_ROUTER"
           ]
         }
       },

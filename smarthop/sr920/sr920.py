@@ -464,6 +464,12 @@ class SR920(contextlib.AbstractContextManager):
                     return False
             elif json_key in ["ENABLE_TIME_SYNC", "OPERATION_MODE", "FIXED_ADDRESSES"]:
                 configs[json_key] = json_value
+            elif json_key == "PREFERRED_PARENT_NODE":
+                config_id = sr920.SR920ConfigId[json_key]
+                configs[config_id] = {
+                    "count": len(json_value),
+                    "addresses": json_value,
+                }
             else:
                 try:
                     config_id = sr920.SR920ConfigId[json_key]

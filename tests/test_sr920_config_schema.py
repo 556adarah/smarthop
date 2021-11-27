@@ -34,6 +34,21 @@ class TestSR920ConfigSchema(unittest.TestCase):
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.validate({"TX_POWER": 0}, self.schema)
 
+    def test_async_fallback_count(self):
+        self.assert_validation_succeeded({"ASYNC_FALLBACK_COUNT": 0})
+        self.assert_validation_succeeded({"ASYNC_FALLBACK_COUNT": 255})
+
+        # out of range (0-222)
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"ASYNC_FALLBACK_COUNT": -1}, self.schema)
+
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"ASYNC_FALLBACK_COUNT": 256}, self.schema)
+
+        # invalid type
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"ASYNC_FALLBACK_COUNT": "2"}, self.schema)
+
     def test_led(self):
         self.assert_validation_succeeded({"LED": True})
         self.assert_validation_succeeded({"LED": False})
@@ -57,6 +72,14 @@ class TestSR920ConfigSchema(unittest.TestCase):
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.validate({"DUMMY_SIZE": "8"}, self.schema)
 
+    def test_enable_encryption(self):
+        self.assert_validation_succeeded({"ENABLE_ENCRYPTION": True})
+        self.assert_validation_succeeded({"ENABLE_ENCRYPTION": False})
+
+        # invalid type
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"ENABLE_ENCRYPTION": "True"}, self.schema)
+
     def test_auto_start(self):
         self.assert_validation_succeeded({"AUTO_START": True})
         self.assert_validation_succeeded({"AUTO_START": False})
@@ -64,6 +87,21 @@ class TestSR920ConfigSchema(unittest.TestCase):
         # invalid type
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.validate({"AUTO_START": "True"}, self.schema)
+
+    def test_mac_retry_count(self):
+        self.assert_validation_succeeded({"MAC_RETRY_COUNT": 0})
+        self.assert_validation_succeeded({"MAC_RETRY_COUNT": 7})
+
+        # out of range (0-222)
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"MAC_RETRY_COUNT": -1}, self.schema)
+
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"MAC_RETRY_COUNT": 8}, self.schema)
+
+        # invalid type
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"MAC_RETRY_COUNT": "3"}, self.schema)
 
     def test_node_type(self):
         self.assert_validation_succeeded({"NODE_TYPE": "COORDINATOR"})
@@ -78,6 +116,63 @@ class TestSR920ConfigSchema(unittest.TestCase):
         # invalid type
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.validate({"NODE_TYPE": 0}, self.schema)
+
+    def test_preferred_parent_node(self):
+        # require NODE_TYPE as ROUTER or SLEEP_ROUTER
+        self.assert_validation_succeeded(
+            {
+                "NODE_TYPE": "ROUTER",
+                "PREFERRED_PARENT_NODE": [],
+            }
+        )
+
+        self.assert_validation_succeeded(
+            {
+                "NODE_TYPE": "SLEEP_ROUTER",
+                "PREFERRED_PARENT_NODE": ["0123"],
+            }
+        )
+
+        # invalid value
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "ROUTER",
+                    "PREFERRED_PARENT_NODE": ["WXYZ"],
+                },
+                self.schema,
+            )
+
+        # invalid type
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "ROUTER",
+                    "PREFERRED_PARENT_NODE": [1234],
+                },
+                self.schema,
+            )
+
+        # invalid object
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "ROUTER",
+                    "PREFERRED_PARENT_NODE": "invalid_object",
+                },
+                self.schema,
+            )
+
+    def test_delete_unreachable_neighbor_info(self):
+        self.assert_validation_succeeded({"DELETE_UNREACHABLE_NEIGHBOR_INFO": True})
+        self.assert_validation_succeeded({"DELETE_UNREACHABLE_NEIGHBOR_INFO": False})
+
+        # invalid type
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {"DELETE_UNREACHABLE_NEIGHBOR_INFO": "True"},
+                self.schema,
+            )
 
     def test_channel(self):
         self.assert_validation_succeeded({"CHANNEL": 33})
@@ -149,6 +244,14 @@ class TestSR920ConfigSchema(unittest.TestCase):
                 },
                 self.schema,
             )
+
+    def test_enable_data_encryption(self):
+        self.assert_validation_succeeded({"ENABLE_DATA_ENCRYPTION": True})
+        self.assert_validation_succeeded({"ENABLE_DATA_ENCRYPTION": False})
+
+        # invalid type
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"ENABLE_DATA_ENCRYPTION": "True"}, self.schema)
 
     def test_operation_mode(self):
         # require NODE_TYPE
@@ -726,6 +829,20 @@ class TestSR920ConfigSchema(unittest.TestCase):
                 {
                     "NODE_TYPE": "SLEEP_ROUTER",
                     "FIXED_ADDRESSES": {},
+                },
+                self.schema,
+            )
+
+        # missing NODE_TYPE
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({"PREFERRED_PARENT_NODE": ["0123"]}, self.schema)
+
+        # NODE_TYPE should be ROUTER or SLEEP_ROUTER
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(
+                {
+                    "NODE_TYPE": "COORDINATOR",
+                    "PREFERRED_PARENT_NODE": ["0123"],
                 },
                 self.schema,
             )
