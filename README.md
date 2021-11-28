@@ -57,6 +57,13 @@ Note that references are provided only in Japanese.
 
 ## History
 
+### v0.1 beta 3
+
+- NEW: SR920 supports to load configurations from CSV file.
+- NEW: SR920 supports to extract configurations from the SR module.
+- NEW: JSON configuration supports all configurations for the SR module.
+- FIX: wrong encoding for TIME_SYNC configuration
+
 ### v0.1 beta 2
 
 - NEW: SR920 supports radio status measurement, firmware update and channel scan features.
